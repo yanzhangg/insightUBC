@@ -2,7 +2,7 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	ResultTooLargeError
+	ResultTooLargeError,
 } from "../../src/controller/IInsightFacade";
 import InsightFacade from "../../src/controller/InsightFacade";
 
@@ -61,8 +61,21 @@ describe("InsightFacade", function () {
 			const id: string = "sections";
 			const content: string = datasetContents.get("sections") ?? "";
 			const expected: string[] = [id];
-			return insightFacade.addDataset(id, content, InsightDatasetKind.Sections)
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
 				.then((result: string[]) => expect(result).to.deep.equal(expected));
+		});
+
+		it("should list no datasets", function () {
+			return insightFacade
+				.listDatasets()
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.have.length(0);
+				})
+				.catch(() => {
+					expect.fail("Should not fail");
+				});
 		});
 	});
 
