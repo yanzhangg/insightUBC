@@ -1,0 +1,46 @@
+{
+  "title": "valid query using IS with asterisk",
+  "input": {
+    "WHERE": {
+      "IS": {
+        "sections_dept": "*for*"
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [
+        "sections_dept",
+        "sections_fail"
+      ],
+      "ORDER": "sections_dept"
+    }
+  },
+  "errorExpected": false,
+  "expected": [
+    {
+      "sections_dept": "ufor",
+      "sections_fail": 0
+    },
+    {
+      "sections_dept": "ufor",
+      "sections_fail": 0
+    },
+    {
+      "sections_dept": "ufor",
+      "sections_fail": 1
+    },
+    {
+      "sections_dept": "ufor",
+      "sections_fail": 1
+    },
+    {
+      "sections_dept": "ufor",
+      "sections_fail": 0
+    },
+    {
+      "sections_dept": "ufor",
+      "sections_fail": 0
+    }
+  ]
+}
+
+

@@ -1,0 +1,20 @@
+{
+  "title": "invalid query which references dataset id not added",
+  "input":
+  {
+    "WHERE": {
+      "GT": {
+        "pairs_fail": 200
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [
+        "pairs_dept",
+        "pairs_fail"
+      ],
+      "ORDER": "pairs_fail"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

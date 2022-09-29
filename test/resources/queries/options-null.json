@@ -1,0 +1,14 @@
+{
+  "title": "invalid query with null options",
+  "input":
+  {
+    "WHERE": {
+      "GT": {
+        "sections_fail": 200
+      }
+    },
+    "OPTIONS": null
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

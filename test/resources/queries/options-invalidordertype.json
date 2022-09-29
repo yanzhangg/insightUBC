@@ -1,0 +1,20 @@
+{
+  "title": "invalid query with invalid order type",
+  "input":
+  {
+  "WHERE": {
+    "IS" : {
+      "sections_dept": "*for*"
+    }
+  },
+  "OPTIONS": {
+    "COLUMNS": [
+      "sections_dept",
+      "sections_fail"
+    ],
+    "ORDER": ["sections_dept", "sections_fail"]
+  }
+},
+  "errorExpected": true,
+  "expected": "InsightError"
+}

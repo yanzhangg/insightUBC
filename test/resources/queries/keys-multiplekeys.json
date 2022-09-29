@@ -1,0 +1,135 @@
+{
+  "title": "valid query with multiple keys",
+  "input": {
+    "WHERE": {
+      "OR": [
+        {
+          "AND": [
+            {
+              "GT": {
+                "sections_audit": 3
+              }
+            },
+            {
+              "IS": {
+                "sections_dept": "cpsc"
+              }
+            }
+          ]
+        },
+        {
+          "LT": {
+            "sections_avg": 30
+          }
+        },
+        {
+          "EQ": {
+            "sections_fail": 400
+          }
+        }
+      ]
+    },
+    "OPTIONS": {
+      "COLUMNS": [
+        "sections_dept",
+        "sections_id",
+        "sections_avg",
+        "sections_audit"
+      ],
+      "ORDER": "sections_avg"
+    }
+  },
+  "errorExpected": false,
+  "expected": [
+    {
+      "sections_dept": "lfs",
+      "sections_id": "100",
+      "sections_avg": 0,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "lfs",
+      "sections_id": "100",
+      "sections_avg": 0,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "frst",
+      "sections_id": "202",
+      "sections_avg": 0,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "wood",
+      "sections_id": "475",
+      "sections_avg": 1,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "busi",
+      "sections_id": "330",
+      "sections_avg": 4,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "busi",
+      "sections_id": "330",
+      "sections_avg": 4,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "fopr",
+      "sections_id": "362",
+      "sections_avg": 4.5,
+      "sections_audit": 0
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "110",
+      "sections_avg": 77.43,
+      "sections_audit": 5
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "340",
+      "sections_avg": 77.93,
+      "sections_audit": 6
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "340",
+      "sections_avg": 80.29,
+      "sections_audit": 14
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "340",
+      "sections_avg": 80.29,
+      "sections_audit": 11
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "540",
+      "sections_avg": 90.53,
+      "sections_audit": 21
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "540",
+      "sections_avg": 90.53,
+      "sections_audit": 18
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "540",
+      "sections_avg": 91.22,
+      "sections_audit": 9
+    },
+    {
+      "sections_dept": "cpsc",
+      "sections_id": "540",
+      "sections_avg": 91.22,
+      "sections_audit": 9
+    }
+  ]
+}

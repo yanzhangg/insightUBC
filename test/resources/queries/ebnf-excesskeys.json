@@ -1,0 +1,18 @@
+{
+  "title": "invalid query with excess keys in query (no OPTIONS)",
+  "input":
+  {
+    "WHERE": {
+      "GT": {
+        "sections_fail": 200
+      }
+    },
+      "COLUMNS": [
+        "sections_dept",
+        "sections_fail"
+      ],
+      "ORDER": "sections_fail"
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}
