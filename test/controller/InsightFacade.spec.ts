@@ -66,12 +66,74 @@ describe("InsightFacade", function () {
 				.then((result: string[]) => expect(result).to.deep.equal(expected));
 		});
 
-		it("should list no datasets", function () {
+		it("Should list no datasets", function () {
 			return insightFacade
 				.listDatasets()
 				.then((insightDatasets) => {
 					expect(insightDatasets).to.be.an.instanceof(Array);
 					expect(insightDatasets).to.have.length(0);
+				})
+				.catch(() => {
+					expect.fail("Should not fail");
+				});
+		});
+
+		it("Should list one dataset", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => insightFacade.listDatasets())
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.deep.equal([
+						{
+							id: "sections",
+							kind: InsightDatasetKind.Sections,
+							numRows: 64612,
+						},
+					]);
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.be.length(1);
+
+					const [insightDataset] = insightDatasets;
+					expect(insightDataset).to.have.property("id");
+					expect(insightDataset.id).to.equal("sections");
+				})
+				.catch(() => {
+					expect.fail("Should not fail");
+				});
+		});
+
+		it("Should list multiple datasets", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => {
+					return insightFacade.addDataset("sections-2", content, InsightDatasetKind.Sections);
+				})
+				.then(() => {
+					return insightFacade.listDatasets();
+				})
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.have.length(2);
+
+					const insightDatasetSections = insightDatasets.find((dataset) => dataset.id === "sections");
+					expect(insightDatasetSections).to.exist;
+					expect(insightDatasetSections).to.deep.equal({
+						id: "sections",
+						kind: InsightDatasetKind.Sections,
+						numRows: 64612,
+					});
+
+					const insightDatasetSections2 = insightDatasets.find((dataset) => dataset.id === "sections-2");
+					expect(insightDatasetSections2).to.exist;
+					expect(insightDatasetSections2).to.deep.equal({
+						id: "sections-2",
+						kind: InsightDatasetKind.Sections,
+						numRows: 64612,
+					});
 				})
 				.catch(() => {
 					expect.fail("Should not fail");

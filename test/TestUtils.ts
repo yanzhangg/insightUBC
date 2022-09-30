@@ -4,12 +4,12 @@ import * as fs from "fs-extra";
 
 export const persistDir = "./data";
 
-export function getContentFromArchives (name: string) {
+export function getContentFromArchives(name: string) {
 	return fs.readFileSync(`test/resources/archives/${name}`).toString("base64");
 }
 
 export function clearDisk(): void {
-	fs.removeSync((persistDir));
+	fs.removeSync(persistDir);
 }
 
 export function readDisk(): string[] {
