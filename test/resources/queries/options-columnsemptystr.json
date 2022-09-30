@@ -1,0 +1,18 @@
+{
+  "title": "invalid query with empty string in columns",
+  "input":
+  {
+    "WHERE": {
+      "IS": {
+        "sections_dept": "*for*"
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [""],
+      "ORDER": "sections_dept"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}
+

@@ -1,0 +1,16 @@
+{
+  "title": "invalid query with no COLUMNS",
+  "input":
+  {
+    "WHERE": {
+      "GT": {
+        "sections_fail": 200
+      }
+    },
+    "OPTIONS": {
+      "ORDER": "sections_fail"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

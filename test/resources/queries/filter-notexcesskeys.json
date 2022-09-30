@@ -1,0 +1,27 @@
+{
+  "title": "invalid query NOT with no filter",
+  "input":
+  {
+    "WHERE": {
+      "NOT": {
+        "LT": {
+          "sections_fail": 200
+        }
+      ,
+        "IS": {
+          "sections_dept": "chem"
+        }
+
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [
+        "sections_dept",
+        "sections_fail"
+      ],
+      "ORDER": "sections_fail"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "invalid query with empty COLUMNS array",
+  "input":
+  {
+    "WHERE": {
+      "GT": {
+        "sections_fail": 200
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [],
+      "ORDER": "sections_fail"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

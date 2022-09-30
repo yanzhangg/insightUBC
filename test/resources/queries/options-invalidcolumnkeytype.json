@@ -1,0 +1,17 @@
+{
+  "title": "invalid query with invalid column key type",
+  "input":
+  {
+    "WHERE": {
+      "IS": {
+        "sections_dept": "*for*"
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [100],
+      "ORDER": "sections_dept"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

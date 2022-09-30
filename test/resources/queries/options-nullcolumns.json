@@ -1,0 +1,17 @@
+{
+  "title": "invalid query with null columns",
+  "input":
+  {
+    "WHERE": {
+      "GT": {
+        "sections_fail": 200
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": null,
+      "ORDER": "sections_dept"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

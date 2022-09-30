@@ -1,0 +1,21 @@
+{
+  "title": "invalid query AND with zero keys",
+  "input":
+  {
+    "WHERE": {
+      "AND": [
+        {
+        }
+      ]
+    },
+    "OPTIONS": {
+      "COLUMNS": [
+        "sections_dept",
+        "sections_fail"
+      ],
+      "ORDER": "sections_fail"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

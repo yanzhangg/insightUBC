@@ -1,0 +1,114 @@
+{
+  "title": "valid query with empty WHERE clause",
+  "input": {
+    "WHERE": {},
+    "OPTIONS": {
+      "COLUMNS": [
+        "small_dept"
+      ],
+      "ORDER": "small_dept"
+    }
+  },
+  "errorExpected": false,
+  "expected": [
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    },
+    {
+      "small_dept": "cpsc"
+    }
+  ]
+}

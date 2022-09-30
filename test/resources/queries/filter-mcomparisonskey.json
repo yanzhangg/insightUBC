@@ -1,0 +1,20 @@
+{
+  "title": "invalid query with invalid math comparison with skey",
+  "input":
+  {
+    "WHERE": {
+      "EQ": {
+        "sections_uuid": 200
+      }
+    },
+    "OPTIONS": {
+      "COLUMNS": [
+        "sections_dept",
+        "sections_uuid"
+      ],
+      "ORDER": "sections_uuid"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}

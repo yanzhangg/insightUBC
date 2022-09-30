@@ -1,0 +1,15 @@
+{
+  "title": "invalid query with null body",
+  "input":
+  {
+    "WHERE": null,
+    "OPTIONS": {
+      "COLUMNS": [
+        "small_dept"
+      ],
+      "ORDER": "small_dept"
+    }
+  },
+  "errorExpected": true,
+  "expected": "InsightError"
+}
