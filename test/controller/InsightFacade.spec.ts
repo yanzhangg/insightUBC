@@ -2,6 +2,7 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
+	NotFoundError,
 	ResultTooLargeError,
 } from "../../src/controller/IInsightFacade";
 import InsightFacade from "../../src/controller/InsightFacade";
@@ -21,6 +22,8 @@ describe("InsightFacade", function () {
 	// automatically be loaded in the 'before' hook.
 	const datasetsToLoad: {[key: string]: string} = {
 		sections: "./test/resources/archives/pair.zip",
+		emptyDataset: "./test/resources/archives/empty.zip",
+		textFile: "./test/resources/archives/test.txt",
 	};
 
 	before(function () {
@@ -64,6 +67,80 @@ describe("InsightFacade", function () {
 			return insightFacade
 				.addDataset(id, content, InsightDatasetKind.Sections)
 				.then((result: string[]) => expect(result).to.deep.equal(expected));
+		});
+
+		it("Should throw an InsightError for a non-valid dataset", function () {
+			const id: string = "emptyDataset";
+			const content: string = datasetContents.get("emptyDataset") ?? "";
+
+			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Sections);
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError for a non-zip dataset", function () {
+			const id: string = "textFile";
+			const content: string = datasetContents.get("textFile") ?? "";
+
+			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Sections);
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should add multiple datasets", function () {
+			const id: string = "sections";
+			const id2: string = "sections-2";
+			const content: string = datasetContents.get("sections") ?? "";
+
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => {
+					return insightFacade.addDataset(id2, content, InsightDatasetKind.Sections);
+				})
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.be.length(2);
+					expect(insightDatasets).to.include("sections");
+					expect(insightDatasets).to.include("sections-2");
+				})
+				.catch(() => {
+					expect.fail("Should not fail");
+				});
+		});
+
+		it("Should throw an InsightError if the same dataset id is added", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
+
+			const result = insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => insightFacade.addDataset(id, content, InsightDatasetKind.Sections));
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError if a dataset with an invalid id is added (underscore)", function () {
+			const content: string = datasetContents.get("sections") ?? "";
+
+			const result = insightFacade.addDataset("sections_", content, InsightDatasetKind.Sections);
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError if a dataset with an invalid id is added (whitespace)", function () {
+			const content: string = datasetContents.get("sections") ?? "";
+
+			const result = insightFacade.addDataset(" ", content, InsightDatasetKind.Sections);
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError if a dataset with an invalid id is added (empty id)", function () {
+			const content: string = datasetContents.get("sections") ?? "";
+
+			const result = insightFacade.addDataset("", content, InsightDatasetKind.Sections);
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
 
 		it("Should list no datasets", function () {
@@ -138,6 +215,47 @@ describe("InsightFacade", function () {
 				.catch(() => {
 					expect.fail("Should not fail");
 				});
+		});
+
+		it("Should add one dataset then remove the dataset", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
+
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => {
+					return insightFacade.removeDataset(id);
+				})
+				.then(() => {
+					return insightFacade.listDatasets();
+				})
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.have.length(0);
+				})
+				.catch(() => {
+					expect.fail("Should not fail");
+				});
+		});
+
+		it("Should throw a NotFoundError when removing a non-existent dataset id", function () {
+			const result = insightFacade.removeDataset("sections-2");
+			return expect(result).eventually.to.be.rejectedWith(NotFoundError);
+		});
+
+		it("Should throw an InsightError when removing a non-valid dataset id (underscore)", function () {
+			const result = insightFacade.removeDataset("sections_");
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError when removing a non-valid dataset id (whitespace)", function () {
+			const result = insightFacade.removeDataset(" ");
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError when removing a non-valid dataset id (empty string)", function () {
+			const result = insightFacade.removeDataset("");
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
 	});
 
