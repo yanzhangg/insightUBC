@@ -10,7 +10,10 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import * as fs from "fs-extra";
 
 import {folderTest} from "@ubccpsc310/folder-test";
-import {expect} from "chai";
+import {expect, use} from "chai";
+import chaiAsPromised from "chai-as-promised";
+
+use(chaiAsPromised);
 
 describe("InsightFacade", function () {
 	let insightFacade: InsightFacade;
@@ -24,6 +27,10 @@ describe("InsightFacade", function () {
 		sections: "./test/resources/archives/pair.zip",
 		emptyDataset: "./test/resources/archives/empty.zip",
 		textFile: "./test/resources/archives/test.txt",
+		incorrectFolder: "./test/resources/archives/incorrect-folder-name.zip",
+		notJSON: "./test/resources/archives/notJSON.zip",
+		noValidSections: "./test/resources/archives/no-valid-sections.zip",
+		oneJSON: "./test/resources/archives/valid-one-notJSON.zip"
 	};
 
 	before(function () {
@@ -69,7 +76,7 @@ describe("InsightFacade", function () {
 				.then((result: string[]) => expect(result).to.deep.equal(expected));
 		});
 
-		it("Should throw an InsightError for a non-valid dataset", function () {
+		it("Should throw an InsightError for a empty dataset", function () {
 			const id: string = "emptyDataset";
 			const content: string = datasetContents.get("emptyDataset") ?? "";
 
@@ -141,6 +148,46 @@ describe("InsightFacade", function () {
 			const result = insightFacade.addDataset("", content, InsightDatasetKind.Sections);
 
 			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		// Invalid dataset - zip file does not contain folder called courses/
+		it ("should not add dataset with folder not named courses", function () {
+			const content: string = datasetContents.get("incorrectFolder") ?? "";
+			const result = insightFacade.addDataset("incorrectFolder", content, InsightDatasetKind.Sections);
+			expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		// Invalid dataset - sections not in JSON format
+		it ("should not add dataset where sections not in JSON", function () {
+			const content: string = datasetContents.get("notJSON") ?? "";
+			const result = insightFacade.addDataset("notJSON", content, InsightDatasetKind.Sections);
+			expect(result).eventually.to.be.rejectedWith(InsightError);
+			// expect(readDisk()).to.have.length(0);
+		});
+
+		// Invalid dataset - no valid course sections in dataset
+		it ("should not add dataset with no valid sections", function () {
+			const content: string = datasetContents.get("noValidSections") ?? "";
+			const result = insightFacade.addDataset("noValidSections", content, InsightDatasetKind.Sections);
+			expect(result).eventually.to.be.rejectedWith(InsightError);
+			// expect(readDisk()).to.have.length(0);
+		});
+
+		// Valid dataset - one valid course, one invalid (not in JSON)
+		it ("should add dataset with at least one valid course", function () {
+			const content: string = datasetContents.get("oneJSON") ?? "";
+			return insightFacade.addDataset("oneJSON", content, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.be.an.instanceof(Array);
+					expect(result).to.have.length(1);
+					expect(result).to.deep.equal(["oneJSON"]);
+					// expect(readDisk()).to.have.length(1);
+				})
+				.then (() => insightFacade.listDatasets())
+				.then ((insightDatasets) => {
+					expect(insightDatasets).to.have.length(1);
+				})
+				.catch(() => expect.fail("should not have caught error"));
 		});
 
 		it("Should list no datasets", function () {
