@@ -30,7 +30,8 @@ describe("InsightFacade", function () {
 		incorrectFolder: "./test/resources/archives/incorrect-folder-name.zip",
 		notJSON: "./test/resources/archives/notJSON.zip",
 		noValidSections: "./test/resources/archives/no-valid-sections.zip",
-		oneJSON: "./test/resources/archives/valid-one-notJSON.zip"
+		oneJSON: "./test/resources/archives/valid-one-notJSON.zip",
+		// test: "./test/resources/archives/test.zip",
 	};
 
 	before(function () {
@@ -67,13 +68,22 @@ describe("InsightFacade", function () {
 		});
 
 		// This is a unit test. You should create more like this!
-		it("Should add a valid dataset", function () {
-			const id: string = "sections";
-			const content: string = datasetContents.get("sections") ?? "";
+		// it("Should add a valid dataset", function () {
+		// 	const id: string = "sections";
+		// 	const content: string = datasetContents.get("sections") ?? "";
+		// 	const expected: string[] = [id];
+		// 	return insightFacade
+		// 		.addDataset(id, content, InsightDatasetKind.Sections)
+		// 		.then((result: string[]) => expect(result).to.deep.equal(expected));
+		// });
+
+		it("addDataset test dataset", function () {
+			const id: string = "test";
+			const content: string = datasetContents.get("test") ?? "";
 			const expected: string[] = [id];
 			return insightFacade
 				.addDataset(id, content, InsightDatasetKind.Sections)
-				.then((result: string[]) => expect(result).to.deep.equal(expected));
+				.then((result: string[]) => console.log("hello"));
 		});
 
 		it("Should throw an InsightError for a empty dataset", function () {
@@ -151,14 +161,14 @@ describe("InsightFacade", function () {
 		});
 
 		// Invalid dataset - zip file does not contain folder called courses/
-		it ("should not add dataset with folder not named courses", function () {
+		it("should not add dataset with folder not named courses", function () {
 			const content: string = datasetContents.get("incorrectFolder") ?? "";
 			const result = insightFacade.addDataset("incorrectFolder", content, InsightDatasetKind.Sections);
 			expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
 
 		// Invalid dataset - sections not in JSON format
-		it ("should not add dataset where sections not in JSON", function () {
+		it("should not add dataset where sections not in JSON", function () {
 			const content: string = datasetContents.get("notJSON") ?? "";
 			const result = insightFacade.addDataset("notJSON", content, InsightDatasetKind.Sections);
 			expect(result).eventually.to.be.rejectedWith(InsightError);
@@ -166,7 +176,7 @@ describe("InsightFacade", function () {
 		});
 
 		// Invalid dataset - no valid course sections in dataset
-		it ("should not add dataset with no valid sections", function () {
+		it("should not add dataset with no valid sections", function () {
 			const content: string = datasetContents.get("noValidSections") ?? "";
 			const result = insightFacade.addDataset("noValidSections", content, InsightDatasetKind.Sections);
 			expect(result).eventually.to.be.rejectedWith(InsightError);
@@ -174,17 +184,18 @@ describe("InsightFacade", function () {
 		});
 
 		// Valid dataset - one valid course, one invalid (not in JSON)
-		it ("should add dataset with at least one valid course", function () {
+		it("should add dataset with at least one valid course", function () {
 			const content: string = datasetContents.get("oneJSON") ?? "";
-			return insightFacade.addDataset("oneJSON", content, InsightDatasetKind.Sections)
+			return insightFacade
+				.addDataset("oneJSON", content, InsightDatasetKind.Sections)
 				.then((result) => {
 					expect(result).to.be.an.instanceof(Array);
 					expect(result).to.have.length(1);
 					expect(result).to.deep.equal(["oneJSON"]);
 					// expect(readDisk()).to.have.length(1);
 				})
-				.then (() => insightFacade.listDatasets())
-				.then ((insightDatasets) => {
+				.then(() => insightFacade.listDatasets())
+				.then((insightDatasets) => {
 					expect(insightDatasets).to.have.length(1);
 				})
 				.catch(() => expect.fail("should not have caught error"));
@@ -304,6 +315,18 @@ describe("InsightFacade", function () {
 			const result = insightFacade.removeDataset("");
 			return expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
+	});
+
+	it("Should list no datasets", function () {
+		return insightFacade
+			.listDatasets()
+			.then((insightDatasets) => {
+				expect(insightDatasets).to.be.an.instanceof(Array);
+				expect(insightDatasets).to.have.length(0);
+			})
+			.catch(() => {
+				expect.fail("Should not fail");
+			});
 	});
 
 	/*
