@@ -22,6 +22,33 @@ export default class InsightFacade implements IInsightFacade {
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		// **TODO: unzip file using JSZip
+
+		const jsZip = new JSZip();
+		let zipData: string[] = [];
+		const folderName = "courses";
+
+		// jsZip.loadAsync(content).then((zip) => {
+		// 	zip.folder(folderName)?.forEach((filename, zipObj) => {
+		// 		zipObj.async("string").then((data) => {
+		// 			zipData = [data];
+		// 		});
+		// 	});
+		// });
+
+		fs.readFile("test.zip", function(err, data) {
+			if (err) {
+				throw err;
+			}
+			jsZip.loadAsync(data).then(function (zip) {
+				zip.folder(folderName)?.forEach((filename, zipObj) => {
+					zipObj.async("string").then((courseData) => {
+						zipData = [courseData];
+					});
+				});
+			});
+		});
+
+
 		// const jsZip = new JSZip();
 		// let zipData;
 		// jsZip.loadAsync(content).then((zip) => {
@@ -50,8 +77,6 @@ export default class InsightFacade implements IInsightFacade {
 		// 	});
 		// });
 
-		// return Promise.resolve(zipData);
-
 		// **TODO: check if dataset is valid: has to contain at least one valid course section that meets the requirements below:
 		//         - root directory contains a folder called courses/
 		//         - valid courses will always be in JSON format
@@ -63,7 +88,8 @@ export default class InsightFacade implements IInsightFacade {
 
 		// **TODO: save files to the <PROJECT_DIR>/data directory
 
-		return Promise.reject("Not implemented.");
+		return Promise.resolve(zipData);
+		// return Promise.reject("Not implemented.");
 	}
 
 	public removeDataset(id: string): Promise<string> {
