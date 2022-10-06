@@ -30,7 +30,8 @@ describe("InsightFacade", function () {
 		incorrectFolder: "./test/resources/archives/incorrect-folder-name.zip",
 		notJSON: "./test/resources/archives/notJSON.zip",
 		noValidSections: "./test/resources/archives/no-valid-sections.zip",
-		oneJSON: "./test/resources/archives/valid-one-notJSON.zip"
+		oneJSON: "./test/resources/archives/valid-one-notJSON.zip",
+		small: "./test/resources/archives/small.zip"
 	};
 
 	before(function () {
@@ -325,6 +326,21 @@ describe("InsightFacade", function () {
 					datasetContents.get("sections") ?? "",
 					InsightDatasetKind.Sections
 				),
+				insightFacade.addDataset(
+					"sections2",
+					datasetContents.get("sections") ?? "",
+					InsightDatasetKind.Sections
+				),
+				insightFacade.addDataset(
+					"small",
+					datasetContents.get("small") ?? "",
+					InsightDatasetKind.Sections
+				),
+				insightFacade.addDataset(
+					"notJSON",
+					datasetContents.get("notJSON") ?? "",
+					InsightDatasetKind.Sections
+				)
 			];
 
 			return Promise.all(loadDatasetPromises);
@@ -335,6 +351,13 @@ describe("InsightFacade", function () {
 			fs.removeSync(persistDirectory);
 		});
 
+		/* Static Tests */
+		it ("should not answer queries if not in JSON", function () {
+			const result = insightFacade.performQuery("notJSON");
+			expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		/* Dynamic Tests */
 		type PQErrorKind = "ResultTooLargeError" | "InsightError";
 
 		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
