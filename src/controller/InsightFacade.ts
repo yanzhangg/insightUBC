@@ -24,73 +24,41 @@ export default class InsightFacade implements IInsightFacade {
 		// **TODO: unzip file using JSZip
 
 		const jsZip = new JSZip();
-		let zipData: string[] = [];
-		const folderName = "courses";
 
-		// jsZip.loadAsync(content).then((zip) => {
-		// 	zip.folder(folderName)?.forEach((filename, zipObj) => {
-		// 		zipObj.async("string").then((data) => {
-		// 			zipData = [data];
-		// 		});
-		// 	});
-		// });
-
-		fs.readFile("test.zip", function(err, data) {
-			if (err) {
-				throw err;
-			}
-			jsZip.loadAsync(data).then(function (zip) {
-				zip.folder(folderName)?.forEach((filename, zipObj) => {
-					zipObj.async("string").then((courseData) => {
-						zipData = [courseData];
-					});
-				});
+		return jsZip.loadAsync(content, {base64:true}).then((zip) => {
+			const zipData: any[] = [];
+			zip.folder("courses")?.forEach((filename, zipObj) => {
+				zipData.push(zipObj.async("text"));
 			});
+			return Promise.all(zipData);
 		});
 
-
-		// const jsZip = new JSZip();
-		// let zipData;
-		// jsZip.loadAsync(content).then((zip) => {
-		// 	Object.keys(zip.files).forEach(function (filename) {
-		// 		zip.files[filename].async("string").then(function (fileData) {
-		// 			console.log(fileData);
-		// 		});
-		// 	});
-		// });
-
-		// fs.readFile(content, function (err, data) {
-		// 	if (err) {
-		// 		throw err;
-		// 	}
-		// 	JSZip.loadAsync(data).then(function (zip) {
-		// 		zipData = zip.files["CPSC547.json"];
-		// 	});
-		// });
-
-		// fs.readFile(content, function (err, data) {
-		// 	if (err) {
-		// 		throw err;
-		// 	}
-		// 	jsZip.loadAsync(data).then(function (zip) {
-		// 		console.log(jsZip);
-		// 	});
-		// });
-
-		// **TODO: check if dataset is valid: has to contain at least one valid course section that meets the requirements below:
-		//         - root directory contains a folder called courses/
-		//         - valid courses will always be in JSON format
-		//         - each JSON file represents a course and can contain zero or more course valid sections
-		//         - a valid section must contain every field used which can be used by a query
+		// **TODO: check if dataset is valid
 
 
 		// **TODO: parse valid course files into a data structure
 
 		// **TODO: save files to the <PROJECT_DIR>/data directory
 
-		return Promise.resolve(zipData);
-		// return Promise.reject("Not implemented.");
+		return Promise.reject("Not implemented.");
 	}
+
+	// Helper function to check if dataset is valid
+	// **TODO: has to contain at least one valid course section that meets the requirements below:
+	//         - root directory contains a folder called courses/
+	//         - valid courses will always be in JSON format
+	//         - each JSON file represents a course and can contain zero or more course valid sections
+	//         - a valid section must contain every field used which can be used by a query
+	private isDatasetValid(id: string, content: string, kind: InsightDatasetKind): boolean {
+
+		return false;
+	}
+
+	// Helper function to check for valid fields keys
+	private checkValidFields(): boolean {
+		return false;
+	}
+
 
 	public removeDataset(id: string): Promise<string> {
 		return Promise.reject("Not implemented.");

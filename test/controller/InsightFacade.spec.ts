@@ -358,11 +358,6 @@ describe("InsightFacade", function () {
 					"small",
 					datasetContents.get("small") ?? "",
 					InsightDatasetKind.Sections
-				),
-				insightFacade.addDataset(
-					"notJSON",
-					datasetContents.get("notJSON") ?? "",
-					InsightDatasetKind.Sections
 				)
 			];
 
@@ -372,12 +367,6 @@ describe("InsightFacade", function () {
 		after(function () {
 			console.info(`After: ${this.test?.parent?.title}`);
 			fs.removeSync(persistDirectory);
-		});
-
-		/* Static Tests */
-		it ("should not answer queries if not in JSON", function () {
-			const result = insightFacade.performQuery("notJSON");
-			expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
 
 		/* Dynamic Tests */
