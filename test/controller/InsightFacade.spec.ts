@@ -31,8 +31,8 @@ describe("InsightFacade", function () {
 		notJSON: "./test/resources/archives/notJSON.zip",
 		noValidSections: "./test/resources/archives/no-valid-sections.zip",
 		oneJSON: "./test/resources/archives/valid-one-notJSON.zip",
-		small: "./test/resources/archives/small.zip"
-		// test: "./test/resources/archives/test.zip",
+		small: "./test/resources/archives/small.zip",
+		test: "./test/resources/archives/test.zip",
 	};
 
 	before(function () {
@@ -69,23 +69,23 @@ describe("InsightFacade", function () {
 		});
 
 		// This is a unit test. You should create more like this!
-		// it("Should add a valid dataset", function () {
-		// 	const id: string = "sections";
-		// 	const content: string = datasetContents.get("sections") ?? "";
-		// 	const expected: string[] = [id];
-		// 	return insightFacade
-		// 		.addDataset(id, content, InsightDatasetKind.Sections)
-		// 		.then((result: string[]) => expect(result).to.deep.equal(expected));
-		// });
-
-		it("addDataset test dataset", function () {
-			const id: string = "test";
-			const content: string = datasetContents.get("test") ?? "";
+		it("Should add a valid dataset", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
 			const expected: string[] = [id];
 			return insightFacade
 				.addDataset(id, content, InsightDatasetKind.Sections)
-				.then((result: string[]) => console.log("hello"));
+				.then((result: string[]) => expect(result).to.deep.equal(expected));
 		});
+
+		// it("addDataset test dataset", function () {
+		// 	const id: string = "test";
+		// 	const content: string = datasetContents.get("test") ?? "";
+		// 	const expected: string[] = [id];
+		// 	return insightFacade
+		// 		.addDataset(id, content, InsightDatasetKind.Sections)
+		// 		.then((result: string[]) => console.log(result));
+		// });
 
 		it("Should throw an InsightError for a empty dataset", function () {
 			const id: string = "emptyDataset";
