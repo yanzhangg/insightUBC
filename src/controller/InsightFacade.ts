@@ -25,16 +25,15 @@ export default class InsightFacade implements IInsightFacade {
 
 		const jsZip = new JSZip();
 
-		return jsZip.loadAsync(content, {base64:true}).then((zip) => {
+		return jsZip.loadAsync(content, {base64: true}).then((zip) => {
 			const zipData: any[] = [];
 			zip.folder("courses")?.forEach((filename, zipObj) => {
 				zipData.push(zipObj.async("text"));
 			});
-			return Promise.all(zipData);
+			return Promise.all(zipData.slice(1));
 		});
 
 		// **TODO: check if dataset is valid
-
 
 		// **TODO: parse valid course files into a data structure
 
@@ -50,7 +49,6 @@ export default class InsightFacade implements IInsightFacade {
 	//         - each JSON file represents a course and can contain zero or more course valid sections
 	//         - a valid section must contain every field used which can be used by a query
 	private isDatasetValid(id: string, content: string, kind: InsightDatasetKind): boolean {
-
 		return false;
 	}
 
@@ -58,7 +56,6 @@ export default class InsightFacade implements IInsightFacade {
 	private checkValidFields(): boolean {
 		return false;
 	}
-
 
 	public removeDataset(id: string): Promise<string> {
 		return Promise.reject("Not implemented.");
