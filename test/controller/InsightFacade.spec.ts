@@ -32,7 +32,8 @@ describe("InsightFacade", function () {
 		noValidSections: "./test/resources/archives/no-valid-sections.zip",
 		oneJSON: "./test/resources/archives/valid-one-notJSON.zip",
 		small: "./test/resources/archives/small.zip",
-		test: "./test/resources/archives/test.zip",
+		oneCourse: "./test/resources/archives/one-course-test.zip",
+		twoCourses: "./test/resources/archives/two-courses-test.zip",
 	};
 
 	before(function () {
@@ -78,14 +79,14 @@ describe("InsightFacade", function () {
 				.then((result: string[]) => expect(result).to.deep.equal(expected));
 		});
 
-		// it("addDataset test dataset", function () {
-		// 	const id: string = "test";
-		// 	const content: string = datasetContents.get("test") ?? "";
-		// 	const expected: string[] = [id];
-		// 	return insightFacade
-		// 		.addDataset(id, content, InsightDatasetKind.Sections)
-		// 		.then((result: string[]) => console.log(result));
-		// });
+		it("addDataset test dataset", function () {
+			const id: string = "oneCourse";
+			const content: string = datasetContents.get("oneCourse") ?? "";
+			const expected: string[] = [id];
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then((result: string[]) => console.log(result));
+		});
 
 		it("Should throw an InsightError for a empty dataset", function () {
 			const id: string = "emptyDataset";
@@ -318,18 +319,6 @@ describe("InsightFacade", function () {
 		});
 	});
 
-	it("Should list no datasets", function () {
-		return insightFacade
-			.listDatasets()
-			.then((insightDatasets) => {
-				expect(insightDatasets).to.be.an.instanceof(Array);
-				expect(insightDatasets).to.have.length(0);
-			})
-			.catch(() => {
-				expect.fail("Should not fail");
-			});
-	});
-
 	/*
 	 * This test suite dynamically generates tests from the JSON files in test/resources/queries.
 	 * You should not need to modify it; instead, add additional files to the queries directory.
@@ -354,11 +343,7 @@ describe("InsightFacade", function () {
 					datasetContents.get("sections") ?? "",
 					InsightDatasetKind.Sections
 				),
-				insightFacade.addDataset(
-					"small",
-					datasetContents.get("small") ?? "",
-					InsightDatasetKind.Sections
-				)
+				insightFacade.addDataset("small", datasetContents.get("small") ?? "", InsightDatasetKind.Sections),
 			];
 
 			return Promise.all(loadDatasetPromises);
