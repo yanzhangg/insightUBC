@@ -85,7 +85,7 @@ describe("InsightFacade", function () {
 			const expected: string[] = [id];
 			return insightFacade
 				.addDataset(id, content, InsightDatasetKind.Sections)
-				.then((result: string[]) => console.log(result));
+				.then((result: any[]) => console.log(result));
 		});
 
 		it("Should throw an InsightError for a empty dataset", function () {
