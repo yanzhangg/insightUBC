@@ -11,6 +11,7 @@ import {
 } from "./IInsightFacade";
 
 import SectionObject from "./SectionObject";
+import path from "path";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -54,6 +55,7 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.all(zipData.slice(1));
 		}).then((zipData: any[]) => {
 			zipData.forEach((data: any) => {
+				// **TODO: parse valid course files into a data structure
 				let jsonObject = JSON.parse(data);
 				jsonObject.result.forEach((sectionJSON: any) => {
 						// Check if each JSON section includes all query keys
@@ -86,6 +88,10 @@ export default class InsightFacade implements IInsightFacade {
 								(sectionJSON["Section"] === "overall") ? 1900 : Number(sectionJSON["Year"]);
 
 						this.course.push(sectionObject);
+
+						// **TODO: save files to the <PROJECT_DIR>/data directory
+						fs.writeFileSync(path.resolve(__dirname, `../../data/${id}.json`),
+							JSON.stringify(sectionObject));
 					}
 				});
 				this.dataset.push(this.course);
@@ -97,10 +103,6 @@ export default class InsightFacade implements IInsightFacade {
 		});
 
 			// **TODO: check if dataset is valid
-
-			// **TODO: parse valid course files into a data structure
-
-			// **TODO: save files to the <PROJECT_DIR>/data directory
 	}
 
 	// Helper function to check if dataset is valid
