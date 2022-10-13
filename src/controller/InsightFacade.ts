@@ -21,21 +21,22 @@ import path from "path";
 export default class InsightFacade implements IInsightFacade {
 	private dataset: any[];
 	private course: any[];
-	private allDatasetIds: Set<string>;
+	private allDatasetIds: string[];
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
 		this.dataset = [];
 		this.course = [];
-		this.allDatasetIds = new Set();
+		this.allDatasetIds = [];
 	}
+
+										/** addDataset Methods **/
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		// Check for invalid dataset id
-		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined ||
-				this.allDatasetIds.has(id)) {
-			return Promise.reject(new InsightError("Invalid dataset id"));
+		if (!this.checkValidDatasetID(id)) {
+			return Promise.reject(new InsightError("Invalid dataset ID"));
 		}
-		// **TODO: - throw insighterror if dataset is empty
+		// **TODO: check if file is .zip
 		// if (content.substring(content.lastIndexOf(".") + 1) === "zip") { // !!! not working
 		// 	return Promise.reject(new InsightError("Dataset provided not a zip file"));
 		// }
@@ -46,16 +47,18 @@ export default class InsightFacade implements IInsightFacade {
 
 		return jsZip.loadAsync(content, {base64: true}).then((zip) => {
 			const zipData: any[] = [];
-			// if (zip.folder("courses")?.length === 0) { //* *TODO: does not work
-			// 	return Promise.reject(new InsightError("Dataset empty"));
-			// }
+
 			zip.folder("courses")?.forEach((filename, zipObj) => {
 				zipData.push(zipObj.async("text"));
 			});
-			return Promise.all(zipData.slice(1));
+
+			// Reject if empty dataset
+			return (zipData.length === 0) ?
+				Promise.reject(new InsightError("Dataset empty")) : Promise.all(zipData.slice(1));
 		}).then((zipData: any[]) => {
 			zipData.forEach((data: any) => {
-				// **TODO: parse valid course files into a data structure
+				// **TODO: skip over invalid JSON files (check if it is in JSON)
+				// Parse valid course files into a data structure
 				let jsonObject = JSON.parse(data);
 				jsonObject.result.forEach((sectionJSON: any) => {
 						// Check if each JSON section includes all query keys
@@ -88,16 +91,14 @@ export default class InsightFacade implements IInsightFacade {
 								(sectionJSON["Section"] === "overall") ? 1900 : Number(sectionJSON["Year"]);
 
 						this.course.push(sectionObject);
-
-						// **TODO: save files to the <PROJECT_DIR>/data directory
-						fs.writeFileSync(path.resolve(__dirname, `../../data/${id}.json`),
-							JSON.stringify(sectionObject));
 					}
 				});
-				this.dataset.push(this.course);
-				this.allDatasetIds.add(id);
 			});
-			return Promise.resolve(this.course);
+			this.dataset.push(this.course);
+			this.allDatasetIds.push(id);
+			this.saveFileToDisk(id);
+
+			return Promise.resolve(this.allDatasetIds);
 		}).catch((err) => {
 			return Promise.reject(new InsightError(err));
 		});
@@ -105,21 +106,33 @@ export default class InsightFacade implements IInsightFacade {
 			// **TODO: check if dataset is valid
 	}
 
-	// Helper function to check if dataset is valid
-	// **TODO: has to contain at least one valid course section that meets the requirements below:
-	//         - root directory contains a folder called courses/
-	//         - valid courses will always be in JSON format
-	//         - each JSON file represents a course and can contain zero or more course valid sections
-	//         - a valid section must contain every field used which can be used by a query
-	private isDatasetValid(id: string, content: string, kind: InsightDatasetKind): boolean {
-		// Check if courses are in JSON format
-
-
-		return false;
+	// Helper function to check if dataset ID is valid
+	private checkValidDatasetID(id: string): boolean {
+		return !(id.includes("_") ||
+			   id.trim().length === 0 ||
+			   id === "" ||
+			   id === null ||
+			   id === undefined ||
+			   this.allDatasetIds.includes(id));
 	}
 
-	// Helper function to check for valid query keys
-	private checkValidQueryKeys(): boolean {
+	// Helper function to save file to disk (__dir/data)
+	private saveFileToDisk(id: string): void {
+		if (!fs.existsSync(path.resolve(__dirname, "../../data"))) {
+			fs.mkdirSync(path.resolve(__dirname, "../../data"));
+		}
+		fs.writeFileSync(path.resolve(__dirname, `../../data/${id}.json`),
+			JSON.stringify(this.dataset));
+	}
+
+	// Helper function to check if dataset is valid
+	// **TODO: has to contain at least one valid course section that meets the requirements below:
+	//         - root directory contains a folder called courses/ (CAUGHT IN CATCH ALL)
+	//         - valid courses will always be in JSON format
+	//         - each JSON file represents a course and can contain zero or more course valid sections
+	//         - a valid section must contain every field used which can be used by a query (DONE)
+	private isDatasetValid(id: string, content: string, kind: InsightDatasetKind): boolean {
+		// Check if courses are in JSON format
 		return false;
 	}
 
