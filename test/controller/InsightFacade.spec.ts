@@ -12,6 +12,7 @@ import * as fs from "fs-extra";
 import {folderTest} from "@ubccpsc310/folder-test";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
+import path from "path";
 
 use(chaiAsPromised);
 
@@ -85,7 +86,10 @@ describe("InsightFacade", function () {
 			const expected: string[] = [id];
 			return insightFacade
 				.addDataset(id, content, InsightDatasetKind.Sections)
-				.then((result: any[]) => console.log(result));
+				.then((result: any[]) => {
+					console.log(result);
+					expect(fs.existsSync(path.resolve(__dirname, "../../data/oneCourse.json"))).to.deep.equal(true);
+				});
 		});
 
 		it("Should throw an InsightError for a empty dataset", function () {
