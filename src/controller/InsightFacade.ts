@@ -162,7 +162,16 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		return Promise.reject("Not implemented.");
+		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined) {
+			return Promise.reject(new InsightError("Invalid dataset id"));
+		}
+
+		if (!fs.existsSync(path.resolve(__dirname, `../../data/${id}.json`))) {
+			return Promise.reject(new NotFoundError("No dataset with this id"));
+		}
+
+		fs.unlinkSync(`data/${id}.json`);
+		return Promise.resolve(`${id}`);
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
