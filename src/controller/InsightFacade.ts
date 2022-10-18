@@ -40,6 +40,8 @@ export default class InsightFacade implements IInsightFacade {
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		// Reset dataset array
 		this.dataset = [];
+		// Reset numSections count
+		let numSections: number = 0;
 		if (!this.isDatasetValid(id, content, kind)) {
 			return Promise.reject(new InsightError(`Invalid dataset ${this.error}`));
 		}
@@ -65,12 +67,19 @@ export default class InsightFacade implements IInsightFacade {
 					if (this.jsonKeys.every((key) => Object.keys(sectionJSON).includes(key))) {
 						let sectionObject = this.createSectionObject(id, sectionJSON);
 						this.course.push(sectionObject);
+						numSections++;
 					}
 				});
 				if (this.course.length !== 0) {
 					this.dataset.push(this.course);
 				}
 			});
+			const datasetInfo: InsightDataset = {
+				id,
+				kind: InsightDatasetKind.Sections,
+				numRows: numSections,
+			};
+			this.dataset.push(datasetInfo);
 
 			if (this.dataset.length === 0) {
 				return Promise.reject(new InsightError("Dataset Empty"));
@@ -179,6 +188,19 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		return Promise.reject("Not implemented.");
+		const datasets: InsightDataset[] = [];
+
+		if (!fs.existsSync(path.resolve(__dirname, "../../data"))) {
+			return Promise.resolve([]);
+		}
+
+		const files = fs.readdirSync("data");
+		files.map((jsonFile) => {
+			const rawData = fs.readFileSync(`data/${jsonFile}`);
+			const data = JSON.parse(rawData.toString());
+			datasets.push(data.pop());
+		});
+
+		return Promise.resolve(datasets);
 	}
 }
