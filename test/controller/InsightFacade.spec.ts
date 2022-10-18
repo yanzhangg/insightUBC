@@ -86,11 +86,12 @@ describe("InsightFacade", function () {
 			const expected: string[] = [id];
 			return insightFacade
 				.addDataset(id, content, InsightDatasetKind.Sections)
-				.then((result) => {
-					console.log(result);
+				.then(() => {
+					return insightFacade.removeDataset(id);
+				})
+				.then(
+					expect(fs.existsSync(path.resolve(__dirname, "../../data/twoCourses.json"))).to.deep.equal(false));
 					// expect(result).to.be.an.instanceof(InsightError);
-					// expect(fs.existsSync(path.resolve(__dirname, "../../data/oneCourse.json"))).to.deep.equal(true);
-				});
 		});
 
 		it("Should throw an InsightError for a empty dataset", function () {
