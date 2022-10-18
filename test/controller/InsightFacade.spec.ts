@@ -247,6 +247,23 @@ describe("InsightFacade", function () {
 				});
 		});
 
+		it("should list the correct dataset information for twoCourses dataset", function () {
+			const id: string = "twoCourses";
+			const content: string = datasetContents.get("twoCourses") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => insightFacade.listDatasets())
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.deep.equal([
+						{
+							id: "twoCourses",
+							kind: InsightDatasetKind.Sections,
+							numRows: 6,
+						},
+					]);
+				});
+		});
+
 		it("Should list multiple datasets", function () {
 			const id: string = "sections";
 			const content: string = datasetContents.get("sections") ?? "";
