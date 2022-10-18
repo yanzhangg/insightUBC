@@ -20,7 +20,7 @@ import path from "path";
  */
 export default class InsightFacade implements IInsightFacade {
 	private dataset: any[];
-	private course: any[];
+	private course: object[];
 	private allDatasetIds: string[];
 	private error: string;
 	private jsonKeys: string[];
@@ -35,7 +35,7 @@ export default class InsightFacade implements IInsightFacade {
 			"Section"];
 	}
 
-										/** addDataset Methods **/
+											/** addDataset Methods **/
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		// Reset dataset array
@@ -170,6 +170,8 @@ export default class InsightFacade implements IInsightFacade {
 		return sectionObject;
 	}
 
+									/** removeDataset & listDataset Methods **/
+
 	public removeDataset(id: string): Promise<string> {
 		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined) {
 			return Promise.reject(new InsightError("Invalid dataset id"));
@@ -180,11 +182,14 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		fs.unlinkSync(`data/${id}.json`);
-		return Promise.resolve(`${id}`);
-	}
+		const idIndex = this.allDatasetIds.findIndex((idString) => {
+			return idString === id;
+		});
+		if (idIndex !== -1) {
+			this.allDatasetIds.splice(idIndex);
+		}
 
-	public performQuery(query: unknown): Promise<InsightResult[]> {
-		return Promise.reject("Not implemented.");
+		return Promise.resolve(`${id}`);
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
@@ -203,4 +208,65 @@ export default class InsightFacade implements IInsightFacade {
 
 		return Promise.resolve(datasets);
 	}
+
+											/** performQuery Methods **/
+
+	public performQuery(query: unknown): Promise<InsightResult[]> {
+		if (this.isQueryObject(query)) {
+			// Create data structure for query
+			type QueryKey = keyof typeof query;
+			const WHERE = "WHERE" as QueryKey;
+			const OPTIONS = "OPTIONS" as QueryKey;
+
+			console.log(query[OPTIONS]["COLUMNS"]);
+			return Promise.resolve([]);
+		}
+
+		// Validate Query
+		// - incorrectly formatted
+		// - references dataset not added in memory or on disk
+
+		// Returning query
+		// Result too large > 5000 results
+		return Promise.reject("");
+	}
+
+	private isQueryObject (query: unknown): query is object {
+		return (query as object) !== undefined && (query as object) !== null && typeof query === "object";
+	}
+
+	private isQueryValid(query: object): boolean {
+		if (query === {} || query === undefined || query === null || Object.keys(query).length === 0 ||
+			!("WHERE" in query) || !("OPTIONS" in query)) {
+			return false;
+		}
+		type QueryKey = keyof typeof query;
+		const WHERE = "WHERE" as QueryKey;
+		const OPTIONS = "OPTIONS" as QueryKey;
+
+		if (query[WHERE] === undefined || query[WHERE] === null) {
+			return false;
+		}
+		if (query[OPTIONS] === undefined || query[OPTIONS] === null ||
+			Object.keys(query[OPTIONS]).length === 0 || !("COLUMNS" in query[OPTIONS])) {
+			return false;
+		}
+
+		// TODO: references dataset not added, multiple dataset ids, invalid id string (_)
+
+		// TODO: check valid keys (mkey, skey - string/number)
+
+		// TODO: check valid input string (no asterisk)
+
+		// TODO: key in ORDER not in COLUMNS array
+		return true;
+	}
+
+	// Called within COLUMNS, ORDER, or M/S-COMPARISON in WHERE
+	private checkDatasetReference(queryKey: string, id: string): boolean {
+		let idString = queryKey.split("_")[0];
+		return (!idString.includes("_") && !this.allDatasetIds.includes(idString));
+	}
+
+
 }

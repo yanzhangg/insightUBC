@@ -1,0 +1,20 @@
+{
+	"title": "invalid query which has underscore in id string",
+	"input":
+	{
+		"WHERE": {
+			"GT": {
+				"sections__fail": 200
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections__dept",
+				"sections__fail"
+			],
+			"ORDER": "sections__fail"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
