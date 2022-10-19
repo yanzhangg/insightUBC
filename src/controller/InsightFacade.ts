@@ -25,7 +25,6 @@ export default class InsightFacade implements IInsightFacade {
 	private datasetKeys: string[];
 
 	constructor() {
-		console.log("InsightFacadeImpl::init()");
 		this.dataset = [];
 		this.course = [];
 		this.allDatasetIds = [];
@@ -205,6 +204,10 @@ export default class InsightFacade implements IInsightFacade {
 											/** performQuery Methods **/
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
+		if (query === undefined || query === null) {
+			return Promise.reject(new InsightError("Undefined/Null Query Object"));
+		}
+
 		let queryObject = query as object;
 
 		if (!this.isQueryValid(queryObject)) {
@@ -221,19 +224,17 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid Query: options"));
 		}
 
-		// Validate Query
-		// - incorrectly formatted
+		// Validate Query incorrectly formatted
 
-		// Returning query
-		// Result too large > 5000 results
+		// Returning query Result too large > 5000 results
 		return Promise.resolve([]);
 	}
 
 	private isQueryValid(query: object): boolean {
-		return !(query === undefined && query === null && Object.keys(query).length === 0 &&
+		return (query !== undefined && query !== null && Object.keys(query).length !== 0 &&
 				 Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS") &&
-				 query["WHERE" as keyof object] === undefined && query["WHERE" as keyof object] === null &&
-				 query["OPTIONS" as keyof object] === undefined && query["OPTIONS" as keyof object] === null);
+				 query["WHERE" as keyof object] !== undefined && query["WHERE" as keyof object] !== null &&
+				 query["OPTIONS" as keyof object] !== undefined && !query["OPTIONS" as keyof object] !== null);
 	}
 
 	private isQueryOptionsValid(queryOptions: object): boolean {
@@ -259,7 +260,6 @@ export default class InsightFacade implements IInsightFacade {
 			return false;
 		}
 
-		console.log(Object.keys(queryOptions).includes("ORDER"));
 		if (Object.keys(queryOptions).includes("ORDER")) {
 			let optionsOrder: string = queryOptions["ORDER" as keyof object];
 			if (!optionsColumns.includes(optionsOrder) || optionsOrder === null ||
@@ -285,6 +285,9 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	private isQueryWhereValid(queryWhere: object): boolean {
+		if (!(Object.keys(queryWhere).length <= 1)) {
+			return false;
+		}
 		return !(queryWhere === undefined && queryWhere === null);
 	}
 		// TODO: check valid keys (mkey, skey - string/number)
