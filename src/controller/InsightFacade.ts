@@ -1,6 +1,6 @@
 import JSZip, {file} from "jszip";
 import * as fs from "fs-extra";
-
+import path from "path";
 import {
 	IInsightFacade,
 	InsightDataset,
@@ -9,9 +9,7 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-
 import SectionObject from "./SectionObject";
-import path from "path";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -20,22 +18,23 @@ import path from "path";
  */
 export default class InsightFacade implements IInsightFacade {
 	private dataset: any[];
-	private course: any[];
+	private course: object[];
 	private allDatasetIds: string[];
 	private error: string;
 	private jsonKeys: string[];
+	private datasetKeys: string[];
 
 	constructor() {
-		console.log("InsightFacadeImpl::init()");
 		this.dataset = [];
 		this.course = [];
 		this.allDatasetIds = [];
 		this.error = "";
 		this.jsonKeys = ["Subject", "Course", "Avg", "Professor", "Title", "Pass", "Fail", "Audit", "id", "Year",
 			"Section"];
+		this.datasetKeys = ["dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
 	}
 
-										/** addDataset Methods **/
+											/** addDataset Methods **/
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		// Reset dataset array
@@ -101,12 +100,6 @@ export default class InsightFacade implements IInsightFacade {
 			JSON.stringify(this.dataset));
 	}
 
-	// Helper function to check if dataset is valid
-	// has to contain at least one valid course section that meets the requirements below:
-	//         - root directory contains a folder called courses/ (CAUGHT IN CATCH ALL)
-	//         - valid courses will always be in JSON format
-	//         - each JSON file represents a course and can contain zero or more course valid sections
-	//         - a valid section must contain every field used which can be used by a query (DONE)
 	private isDatasetValid(id: string, content: string, kind: InsightDatasetKind): boolean {
 		// Check for valid id
 		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined ||
@@ -170,6 +163,8 @@ export default class InsightFacade implements IInsightFacade {
 		return sectionObject;
 	}
 
+									/** removeDataset & listDataset Methods **/
+
 	public removeDataset(id: string): Promise<string> {
 		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined) {
 			return Promise.reject(new InsightError("Invalid dataset id"));
@@ -180,11 +175,13 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		fs.unlinkSync(`data/${id}.json`);
+		const idIndex = this.allDatasetIds.findIndex((idString) => {
+			return idString === id;
+		});
+		if (idIndex !== -1) {
+			this.allDatasetIds.splice(idIndex);
+		}
 		return Promise.resolve(`${id}`);
-	}
-
-	public performQuery(query: unknown): Promise<InsightResult[]> {
-		return Promise.reject("Not implemented.");
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
@@ -203,4 +200,101 @@ export default class InsightFacade implements IInsightFacade {
 
 		return Promise.resolve(datasets);
 	}
+
+											/** performQuery Methods **/
+
+	public performQuery(query: unknown): Promise<InsightResult[]> {
+		if (query === undefined || query === null) {
+			return Promise.reject(new InsightError("Undefined/Null Query Object"));
+		}
+
+		let queryObject = query as object;
+
+		if (!this.isQueryValid(queryObject)) {
+			return Promise.reject(new InsightError("Invalid Query"));
+		}
+		const queryWhere: object = queryObject["WHERE" as keyof object];
+		const queryOptions: object = queryObject["OPTIONS" as keyof object];
+
+		if (!this.isQueryWhereValid(queryWhere)) {
+			return Promise.reject(new InsightError("Invalid Query: where"));
+		}
+
+		if (!this.isQueryOptionsValid(queryOptions)) {
+			return Promise.reject(new InsightError("Invalid Query: options"));
+		}
+
+		// Validate Query incorrectly formatted
+
+		// Returning query Result too large > 5000 results
+		return Promise.resolve([]);
+	}
+
+	private isQueryValid(query: object): boolean {
+		return (query !== undefined && query !== null && Object.keys(query).length !== 0 &&
+				 Object.keys(query).includes("WHERE") && Object.keys(query).includes("OPTIONS") &&
+				 query["WHERE" as keyof object] !== undefined && query["WHERE" as keyof object] !== null &&
+				 query["OPTIONS" as keyof object] !== undefined && !query["OPTIONS" as keyof object] !== null);
+	}
+
+	private isQueryOptionsValid(queryOptions: object): boolean {
+		if (queryOptions === undefined || queryOptions === null || Object.keys(queryOptions).length === 0 ||
+			!Object.keys(queryOptions).includes("COLUMNS")) {
+			return false;
+		}
+
+		const optionsColumns: string[] = queryOptions["COLUMNS" as keyof object];
+		if (optionsColumns === undefined || optionsColumns === null || Object.keys(optionsColumns).length === 0) {
+			return false;
+		}
+
+		let keys: string[] = [];
+		optionsColumns.map((column) => {
+			if (typeof column !== "string") {
+				return false;
+			}
+			keys.push(column.split("_")[1]);
+		});
+
+		if (!keys.every((key) => this.datasetKeys.includes(key))) {
+			return false;
+		}
+
+		if (Object.keys(queryOptions).includes("ORDER")) {
+			let optionsOrder: string = queryOptions["ORDER" as keyof object];
+			if (!optionsColumns.includes(optionsOrder) || optionsOrder === null ||
+				optionsOrder === undefined || typeof optionsOrder !== "string" ) {
+				return false;
+			}
+		}
+
+		let columns: string[] = [];
+		optionsColumns.map((column) => {
+			let columnId = column.split("_")[0];
+			if (columnId.includes("_")) {
+				return false;
+			}
+			columns.push(columnId);
+		});
+
+		if (!columns.every((column) => column === columns[0]) ||
+			!fs.existsSync(path.resolve(__dirname, `../../data/${columns[0]}.json`))) {
+			return false;
+		}
+		return true;
+	}
+
+	private isQueryWhereValid(queryWhere: object): boolean {
+		if (!(Object.keys(queryWhere).length <= 1)) {
+			return false;
+		}
+		return !(queryWhere === undefined && queryWhere === null);
+	}
+		// TODO: check valid keys (mkey, skey - string/number)
+		// TODO: check valid input string (no asterisk)
+	// Called within COLUMNS, ORDER, or M/S-COMPARISON in WHERE (NEED TO CHECK IF MULTIPLE DATASETS ARE REFERENCED)
+	// private checkDatasetReference(queryKey: string, id: string): boolean {
+	// 	let idString = queryKey.split("_")[0];
+	// 	return (!idString.includes("_") && !this.allDatasetIds.includes(idString));
+	// }
 }
