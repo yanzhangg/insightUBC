@@ -225,8 +225,8 @@ export default class InsightFacade implements IInsightFacade {
 		if (!this.isQueryOptionsValid(queryOptions)) {
 			return Promise.reject(new InsightError("Invalid Query: options"));
 		}
+
 		return filterQuery(queryWhere, this.id).then((result) => outputQuery(result, queryOptions));
-		// Validate Query incorrectly formatted
 	}
 
 	private isQueryValid(query: object): boolean {
@@ -285,9 +285,4 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		return !(queryWhere === undefined && queryWhere === null);
 	}
-	// Called within COLUMNS, ORDER, or M/S-COMPARISON in WHERE (NEED TO CHECK IF MULTIPLE DATASETS ARE REFERENCED)
-	// private checkDatasetReference(queryKey: string, id: string): boolean {
-	// 	let idString = queryKey.split("_")[0];
-	// 	return (!idString.includes("_") && !this.allDatasetIds.includes(idString));
-	// }
 }
