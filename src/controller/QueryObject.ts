@@ -1,49 +1,21 @@
-export interface QueryObject{
-	where: object;
-	options: OptionsObject;
+export interface Filter {
+	filter?: LogicComparison | MComparison | SComparison | Negation | undefined;
 }
 
-export interface OptionsObject {
-	columns: string[];
-	order?: string;
+export interface LogicComparison {
+	logic: "AND" | "OR";
+	filtersArr: Filter[];
 }
 
-export interface WhereObject {
-	filter?: FILTER;
-}
-
-export interface FILTER {
-	logicComparison?: LOGICCOMPARISON;
-	mComparison?: MCOMPARISON;
-	sComparison?: SCOMPARISON;
-	negation?: NEGATION;
-}
-
-export interface LOGICCOMPARISON {
-	logic: LOGIC;
-	filtersArr: FILTER[];
-}
-
-export interface MCOMPARISON {
-	mComparator: MCOMPARATOR;
+export interface MComparison {
+	mComparator: "LT" | "GT" | "EQ";
 	mObject: {[key: string]: number};
 }
 
-export interface SCOMPARISON {
+export interface SComparison {
 	sObject: {[key: string]: string};
 }
 
-export interface NEGATION {
-	filter: FILTER;
-}
-
-export enum LOGIC {
-	AND = "AND",
-	OR = "OR"
-}
-
-export enum MCOMPARATOR {
-	LT = "LT",
-	GT = "GT",
-	EQ = "EQ"
+export interface Negation {
+	filter: Filter;
 }

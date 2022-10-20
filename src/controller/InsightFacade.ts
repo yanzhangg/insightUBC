@@ -10,6 +10,7 @@ import {
 	NotFoundError,
 } from "./IInsightFacade";
 import SectionObject from "./SectionObject";
+import {filterQuery, outputQuery} from "./QueryController";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -23,6 +24,7 @@ export default class InsightFacade implements IInsightFacade {
 	private error: string;
 	private jsonKeys: string[];
 	private datasetKeys: string[];
+	private id: string;
 
 	constructor() {
 		this.dataset = [];
@@ -32,6 +34,7 @@ export default class InsightFacade implements IInsightFacade {
 		this.jsonKeys = ["Subject", "Course", "Avg", "Professor", "Title", "Pass", "Fail", "Audit", "id", "Year",
 			"Section"];
 		this.datasetKeys = ["dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
+		this.id = "";
 	}
 
 											/** addDataset Methods **/
@@ -219,15 +222,11 @@ export default class InsightFacade implements IInsightFacade {
 		if (!this.isQueryWhereValid(queryWhere)) {
 			return Promise.reject(new InsightError("Invalid Query: where"));
 		}
-
 		if (!this.isQueryOptionsValid(queryOptions)) {
 			return Promise.reject(new InsightError("Invalid Query: options"));
 		}
-
+		return filterQuery(queryWhere, this.id).then((result) => outputQuery(result, queryOptions));
 		// Validate Query incorrectly formatted
-
-		// Returning query Result too large > 5000 results
-		return Promise.resolve([]);
 	}
 
 	private isQueryValid(query: object): boolean {
@@ -238,16 +237,15 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	private isQueryOptionsValid(queryOptions: object): boolean {
+		this.id = "";
 		if (queryOptions === undefined || queryOptions === null || Object.keys(queryOptions).length === 0 ||
 			!Object.keys(queryOptions).includes("COLUMNS")) {
 			return false;
 		}
-
 		const optionsColumns: string[] = queryOptions["COLUMNS" as keyof object];
 		if (optionsColumns === undefined || optionsColumns === null || Object.keys(optionsColumns).length === 0) {
 			return false;
 		}
-
 		let keys: string[] = [];
 		optionsColumns.map((column) => {
 			if (typeof column !== "string") {
@@ -255,11 +253,9 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			keys.push(column.split("_")[1]);
 		});
-
 		if (!keys.every((key) => this.datasetKeys.includes(key))) {
 			return false;
 		}
-
 		if (Object.keys(queryOptions).includes("ORDER")) {
 			let optionsOrder: string = queryOptions["ORDER" as keyof object];
 			if (!optionsColumns.includes(optionsOrder) || optionsOrder === null ||
@@ -267,7 +263,6 @@ export default class InsightFacade implements IInsightFacade {
 				return false;
 			}
 		}
-
 		let columns: string[] = [];
 		optionsColumns.map((column) => {
 			let columnId = column.split("_")[0];
@@ -276,11 +271,11 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			columns.push(columnId);
 		});
-
 		if (!columns.every((column) => column === columns[0]) ||
 			!fs.existsSync(path.resolve(__dirname, `../../data/${columns[0]}.json`))) {
 			return false;
 		}
+		this.id = columns[0];
 		return true;
 	}
 
@@ -290,8 +285,6 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		return !(queryWhere === undefined && queryWhere === null);
 	}
-		// TODO: check valid keys (mkey, skey - string/number)
-		// TODO: check valid input string (no asterisk)
 	// Called within COLUMNS, ORDER, or M/S-COMPARISON in WHERE (NEED TO CHECK IF MULTIPLE DATASETS ARE REFERENCED)
 	// private checkDatasetReference(queryKey: string, id: string): boolean {
 	// 	let idString = queryKey.split("_")[0];
