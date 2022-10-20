@@ -6,15 +6,8 @@ import {
 	InsightError,
 	InsightResult,
 	NotFoundError,
+	ResultTooLargeError,
 } from "./IInsightFacade";
-
-import {
-	Filter,
-	LogicComparison,
-	MComparison,
-	SComparison,
-	Negation
-} from "./QueryObject";
 import * as fs from "fs-extra";
 import path from "path";
 
@@ -27,6 +20,10 @@ export function filterQuery(whereObject: object, id: string): Promise<InsightRes
 	const rawDataset = fs.readFileSync(`data/${id}.json`);
 	const dataset = JSON.parse(rawDataset.toString());
 	const datasetOnly: object[][] = dataset.slice(0, -1);
+
+	if (Object.keys(whereObject).length === 0) {
+		return Promise.resolve(getAllData(datasetOnly));
+	}
 
 	return recurse(whereObject, datasetOnly);
 }
@@ -142,6 +139,16 @@ InsightResult[] {
 	return filteredArr;
 }
 
+export function getAllData(datasetArr: object[][]): InsightResult[] {
+	let filteredArr: InsightResult[] = [];
+	datasetArr.forEach((course: object[]) => {
+		Array.from(course).forEach((section: any) => {
+			filteredArr.push(section);
+		});
+	});
+	return filteredArr;
+}
+
 export function compareStringInput(sectionValue: string, operation: string, input: string): boolean {
 	if (operation === "includes") {
 		return (sectionValue?.includes(input));
@@ -165,6 +172,31 @@ export function compareNumberInput(sectionValue: number, operation: string, inpu
 }
 
 // Outputs query in the format provided by the OPTIONS
-export function outputQuery(filterResult: Promise<InsightResult[]>, queryOptions: object) {
-	return Promise.resolve([]);
+export function outputQuery(filterResult: InsightResult[], queryOptions: object):
+Promise<InsightResult[]> {
+
+	if (filterResult.length > 5000) {
+		return Promise.reject(new ResultTooLargeError("Result too large"));
+	}
+
+	const queryColumns: string[] = queryOptions["COLUMNS" as keyof object];
+	let queryOrder: string = "";
+
+	if (Object.keys(queryOptions).includes("ORDER")) {
+		queryOrder = queryOptions["ORDER" as keyof object];
+	}
+
+	let finalResult: InsightResult[] = [];
+
+	Array.from(filterResult).forEach((object) => {
+		let objAsArray = Object.entries(object);
+		let filteredObj = objAsArray.filter(([key, value]) => queryColumns.includes(key));
+		finalResult.push(Object.fromEntries(filteredObj));
+	});
+
+	if (queryOrder !== "") {
+		finalResult.sort((objA, objB) => objA[queryOrder] > objB[queryOrder] ? 1 : -1);
+	}
+
+	return Promise.resolve(finalResult);
 }

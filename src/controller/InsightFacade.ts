@@ -225,13 +225,8 @@ export default class InsightFacade implements IInsightFacade {
 		if (!this.isQueryOptionsValid(queryOptions)) {
 			return Promise.reject(new InsightError("Invalid Query: options"));
 		}
-		let filteredResult: Promise<InsightResult[]>;
-
-		filteredResult = filterQuery(queryWhere, this.id);
-		// outputQuery(filteredResult, queryOptions);
+		return filterQuery(queryWhere, this.id).then((result) => outputQuery(result, queryOptions));
 		// Validate Query incorrectly formatted
-		// Returning query Result too large > 5000 results
-		return Promise.resolve(filteredResult);
 	}
 
 	private isQueryValid(query: object): boolean {
@@ -290,8 +285,6 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		return !(queryWhere === undefined && queryWhere === null);
 	}
-		// TODO: check valid keys (mkey, skey - string/number)
-		// TODO: check valid input string (no asterisk)
 	// Called within COLUMNS, ORDER, or M/S-COMPARISON in WHERE (NEED TO CHECK IF MULTIPLE DATASETS ARE REFERENCED)
 	// private checkDatasetReference(queryKey: string, id: string): boolean {
 	// 	let idString = queryKey.split("_")[0];
