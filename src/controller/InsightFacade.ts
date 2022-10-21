@@ -239,7 +239,12 @@ export default class InsightFacade implements IInsightFacade {
 	private isQueryOptionsValid(queryOptions: object): boolean {
 		this.id = "";
 		if (queryOptions === undefined || queryOptions === null || Object.keys(queryOptions).length === 0 ||
-			!Object.keys(queryOptions).includes("COLUMNS")) {
+			!Object.keys(queryOptions).includes("COLUMNS") || Object.keys(queryOptions).length > 2) {
+			return false;
+		}
+		const optionsKeys: string[] = Object.keys(queryOptions).filter((key) => key !== "COLUMNS")
+			.filter((key) => key !== "ORDER");
+		if (optionsKeys.length > 0) {
 			return false;
 		}
 		const optionsColumns: string[] = queryOptions["COLUMNS" as keyof object];

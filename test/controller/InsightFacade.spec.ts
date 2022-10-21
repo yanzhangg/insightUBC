@@ -155,9 +155,16 @@ describe("InsightFacade", function () {
 		it("Should throw an InsightError if a dataset with an invalid id is added (whitespace)", function () {
 			const content: string = datasetContents.get("sections") ?? "";
 
-			const result = insightFacade.addDataset(" ", content, InsightDatasetKind.Sections);
+			const result = insightFacade.addDataset("  ", content, InsightDatasetKind.Sections);
 
 			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should add dataset with whitespace in id string", function () {
+			const content: string = datasetContents.get("sections") ?? "";
+			return insightFacade
+				.addDataset("sections ", content, InsightDatasetKind.Sections)
+				.then((result: string[]) => expect(result).to.deep.equal(["sections "]));
 		});
 
 		it("Should throw an InsightError if a dataset with an invalid id is added (empty id)", function () {
@@ -203,6 +210,13 @@ describe("InsightFacade", function () {
 					// expect(readDisk()).to.have.length(1);
 				})
 				.catch(() => expect.fail("should not have caught error"));
+		});
+
+		// Invalid add - rooms kind
+		it ("should not add dataset with rooms kind", function () {
+			const content: string = datasetContents.get("sections") ?? "";
+			let result = insightFacade.addDataset("sections", content, InsightDatasetKind.Rooms);
+			expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
 
 		it("Should list no datasets", function () {
@@ -317,6 +331,32 @@ describe("InsightFacade", function () {
 				});
 		});
 
+		it("Should add one dataset then remove then add dataset", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
+
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => {
+					return insightFacade.removeDataset(id);
+				})
+				.then(
+					expect(fs.existsSync(path.resolve(__dirname, "../../data/sections.json"))).to.deep.equal(false)
+				)
+				.then(() => insightFacade.addDataset(id, content, InsightDatasetKind.Sections))
+				.then(() => {
+					return insightFacade.listDatasets();
+				})
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.have.length(1);
+					expect(fs.existsSync(path.resolve(__dirname, "../../data/sections.json"))).to.deep.equal(true);
+				})
+				.catch(() => {
+					expect.fail("Should not fail");
+				});
+		});
+
 		it("Should throw a NotFoundError when removing a non-existent dataset id", function () {
 			const result = insightFacade.removeDataset("sections-2");
 			return expect(result).eventually.to.be.rejectedWith(NotFoundError);
@@ -360,7 +400,14 @@ describe("InsightFacade", function () {
 					datasetContents.get("sections") ?? "",
 					InsightDatasetKind.Sections
 				),
-				insightFacade.addDataset("small", datasetContents.get("small") ?? "", InsightDatasetKind.Sections),
+				insightFacade.addDataset(
+					"small",
+					datasetContents.get("small") ?? "",
+					InsightDatasetKind.Sections),
+				insightFacade.addDataset(
+					"twoCourses ",
+					datasetContents.get("twoCourses") ?? "",
+					InsightDatasetKind.Sections)
 			];
 			return Promise.all(loadDatasetPromises);
 		});

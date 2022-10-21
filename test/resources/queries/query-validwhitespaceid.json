@@ -1,0 +1,25 @@
+{
+	"title": "valid query with whitespace in id",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"twoCourses _dept": "aa*"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"twoCourses _dept"
+			],
+			"ORDER": "twoCourses _dept"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"twoCourses _dept": "aanb"
+		},
+		{
+			"twoCourses _dept": "aanb"
+		}
+	]
+}
