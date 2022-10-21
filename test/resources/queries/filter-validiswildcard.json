@@ -1,0 +1,61 @@
+{
+	"title": "valid IS query with two wildcards",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "*lc*"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		},
+		{
+			"sections_dept": "clch"
+		}
+	]
+}

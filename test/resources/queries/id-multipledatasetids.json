@@ -7,7 +7,7 @@
         "GT": {
           "sections_fail": 200
         },
-        "GT": {
+        "EQ": {
           "sections2_fail": 200
         }
       }

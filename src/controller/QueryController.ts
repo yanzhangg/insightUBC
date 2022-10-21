@@ -190,9 +190,9 @@ export function compareStringInput(sectionValue: string, operation: string, inpu
 	if (operation === "includes") {
 		return (sectionValue?.includes(input));
 	} else if (operation === "startsWith") {
-		return (sectionValue.startsWith(input));
+		return (sectionValue?.startsWith(input));
 	} else if (operation === "endsWith") {
-		return (sectionValue.endsWith(input));
+		return (sectionValue?.endsWith(input));
 	} else {
 		return (sectionValue === input);
 	}

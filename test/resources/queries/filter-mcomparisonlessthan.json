@@ -1,0 +1,54 @@
+{
+	"title": "valid nested query with LT EQ",
+	"input": {
+		"WHERE": {
+			"OR": [
+				{
+					"AND": [
+						{
+							"LT": {
+								"sections_avg": 50
+							}
+						},
+						{
+							"IS": {
+								"sections_dept": "adhe"
+							}
+						}
+					]
+				},
+				{
+					"EQ": {
+						"sections_avg": 50
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "psyc",
+			"sections_id": "315",
+			"sections_avg": 50
+		},
+		{
+			"sections_dept": "chbe",
+			"sections_id": "474",
+			"sections_avg": 50
+		},
+		{
+			"sections_dept": "busi",
+			"sections_id": "441",
+			"sections_avg": 50
+		}
+	]
+}
