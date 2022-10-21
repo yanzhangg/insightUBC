@@ -1,0 +1,18 @@
+{
+	"title": "invalid IS query with wildcard at the end",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "u*f*"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

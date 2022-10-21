@@ -195,7 +195,7 @@ describe("InsightFacade", function () {
 			const content: string = datasetContents.get("noValidSections") ?? "";
 			const result = insightFacade.addDataset("noValidSections", content, InsightDatasetKind.Sections);
 			expect(result).eventually.to.be.rejectedWith(InsightError);
-			// expect(readDisk()).to.have.length(0);
+			expect(fs.existsSync(path.resolve(__dirname, "../../data/noValidSections.json"))).to.deep.equal(false);
 		});
 
 		// Valid dataset - one valid course, one invalid (not in JSON)
@@ -354,6 +354,29 @@ describe("InsightFacade", function () {
 				})
 				.catch(() => {
 					expect.fail("Should not fail");
+				});
+		});
+
+		it("Should add one dataset then remove the same dataset twice", function () {
+			const id: string = "sections";
+			const content: string = datasetContents.get("sections") ?? "";
+
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Sections)
+				.then(() => {
+					return insightFacade.removeDataset(id);
+				})
+				.then(() => {
+					return insightFacade.listDatasets();
+				})
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.have.length(0);
+					expect(fs.existsSync(path.resolve(__dirname, "../../data/sections.json"))).to.deep.equal(false);
+				})
+				.then(() => {
+					const result = insightFacade.removeDataset(id);
+					return expect(result).eventually.to.be.rejectedWith(NotFoundError);
 				});
 		});
 
