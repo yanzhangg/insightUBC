@@ -1,0 +1,18 @@
+{
+	"title": "invalid IS query with wildcard at the start",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "**f"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

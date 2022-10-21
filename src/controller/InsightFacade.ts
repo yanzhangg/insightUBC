@@ -76,6 +76,9 @@ export default class InsightFacade implements IInsightFacade {
 					this.dataset.push(this.course);
 				}
 			});
+			if (this.dataset.length === 0) {
+				return Promise.reject(new InsightError("Dataset Empty"));
+			}
 			const datasetInfo: InsightDataset = {
 				id,
 				kind: InsightDatasetKind.Sections,
@@ -83,9 +86,6 @@ export default class InsightFacade implements IInsightFacade {
 			};
 			this.dataset.push(datasetInfo);
 
-			if (this.dataset.length === 0) {
-				return Promise.reject(new InsightError("Dataset Empty"));
-			}
 			this.allDatasetIds.push(id);
 			this.saveFileToDisk(id);
 			return Promise.resolve(this.allDatasetIds);
