@@ -9,7 +9,6 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-import SectionObject from "./SectionObject";
 import {filterQuery, outputQuery} from "./QueryController";
 
 /**
@@ -25,6 +24,7 @@ export default class InsightFacade implements IInsightFacade {
 	private jsonKeys: string[];
 	private datasetKeys: string[];
 	private id: string;
+	private numSections: number;
 
 	constructor() {
 		this.dataset = [];
@@ -35,6 +35,7 @@ export default class InsightFacade implements IInsightFacade {
 			"Section"];
 		this.datasetKeys = ["dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
 		this.id = "";
+		this.numSections = 0;
 	}
 
 											/** addDataset Methods **/
@@ -43,7 +44,7 @@ export default class InsightFacade implements IInsightFacade {
 		// Reset dataset array
 		this.dataset = [];
 		// Reset numSections count
-		let numSections: number = 0;
+		this.numSections = 0;
 		if (!this.isDatasetValid(id, content, kind)) {
 			return Promise.reject(new InsightError(`Invalid dataset ${this.error}`));
 		}
@@ -62,16 +63,7 @@ export default class InsightFacade implements IInsightFacade {
 		}).then((zipData: any[]) => {
 			zipData.forEach((data: any) => {
 				this.course = [];
-				// Parse valid course files into a data structure
-				let jsonObject = this.parseValidJSON(data);
-				jsonObject?.result.forEach((sectionJSON: any) => {
-					// Check if each JSON section includes all query keys
-					if (this.jsonKeys.every((key) => Object.keys(sectionJSON).includes(key))) {
-						let sectionObject = this.createSectionObject(id, sectionJSON);
-						this.course.push(sectionObject);
-						numSections++;
-					}
-				});
+				this.parseJsonObject(data, id);
 				if (this.course.length !== 0) {
 					this.dataset.push(this.course);
 				}
@@ -82,7 +74,7 @@ export default class InsightFacade implements IInsightFacade {
 			const datasetInfo: InsightDataset = {
 				id,
 				kind: InsightDatasetKind.Sections,
-				numRows: numSections,
+				numRows: this.numSections,
 			};
 			this.dataset.push(datasetInfo);
 
@@ -137,6 +129,19 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		this.error = "";
 		return true;
+	}
+
+	// Helper function to parse JSON and create section object and course array
+	private parseJsonObject(data: any, id: string): void {
+		let jsonObject = this.parseValidJSON(data);
+		jsonObject?.result.forEach((sectionJSON: any) => {
+			// Check if each JSON section includes all query keys
+			if (this.jsonKeys.every((key) => Object.keys(sectionJSON).includes(key))) {
+				let sectionObject = this.createSectionObject(id, sectionJSON);
+				this.course.push(sectionObject);
+				this.numSections++;
+			}
+		});
 	}
 
 	// Helper function to parse valid JSON files and skip invalid ones
