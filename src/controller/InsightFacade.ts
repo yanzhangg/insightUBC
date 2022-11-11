@@ -10,6 +10,7 @@ import {
 	NotFoundError,
 } from "./IInsightFacade";
 import {filterQuery, outputQuery} from "./QueryController";
+import RoomsController from "./RoomsController";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -45,6 +46,12 @@ export default class InsightFacade implements IInsightFacade {
 		this.dataset = [];
 		// Reset numSections count
 		this.numSections = 0;
+
+		if (kind === InsightDatasetKind.Rooms) {
+			let roomsController = new RoomsController();
+			return roomsController.addRoomsDataset(id, content);
+		}
+
 		if (!this.isDatasetValid(id, content, kind)) {
 			return Promise.reject(new InsightError(`Invalid dataset ${this.error}`));
 		}
@@ -177,7 +184,6 @@ export default class InsightFacade implements IInsightFacade {
 		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined) {
 			return Promise.reject(new InsightError("Invalid dataset id"));
 		}
-
 		if (!fs.existsSync(path.resolve(__dirname, `../../data/${id}.json`))) {
 			return Promise.reject(new NotFoundError("No dataset with this id"));
 		}
@@ -198,14 +204,12 @@ export default class InsightFacade implements IInsightFacade {
 		if (!fs.existsSync(path.resolve(__dirname, "../../data"))) {
 			return Promise.resolve([]);
 		}
-
 		const files = fs.readdirSync("data");
 		files.map((jsonFile) => {
 			const rawData = fs.readFileSync(`data/${jsonFile}`);
 			const data = JSON.parse(rawData.toString());
 			datasets.push(data.pop());
 		});
-
 		return Promise.resolve(datasets);
 	}
 
@@ -215,7 +219,6 @@ export default class InsightFacade implements IInsightFacade {
 		if (query === undefined || query === null) {
 			return Promise.reject(new InsightError("Undefined/Null Query Object"));
 		}
-
 		let queryObject = query as object;
 
 		if (!this.isQueryValid(queryObject)) {
@@ -230,7 +233,6 @@ export default class InsightFacade implements IInsightFacade {
 		if (!this.isQueryOptionsValid(queryOptions)) {
 			return Promise.reject(new InsightError("Invalid Query: options"));
 		}
-
 		return filterQuery(queryWhere, this.id).then((result) => outputQuery(result, queryOptions));
 	}
 
