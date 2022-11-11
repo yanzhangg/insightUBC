@@ -94,6 +94,15 @@ describe("InsightFacade", function () {
 					// expect(result).to.be.an.instanceof(InsightError);
 		});
 
+		// it("rooms addDataset test", function () {
+		// 	const id: string = "rooms";
+		// 	const content: string = datasetContents.get("rooms") ?? "";
+		// 	const expected: string[] = [id];
+		// 	return insightFacade
+		// 		.addDataset(id, content, InsightDatasetKind.Rooms)
+		// 		.then((result: string[]) => console.log(result));
+		// });
+
 		it("Should throw an InsightError for a empty dataset", function () {
 			const id: string = "emptyDataset";
 			const content: string = datasetContents.get("emptyDataset") ?? "";
