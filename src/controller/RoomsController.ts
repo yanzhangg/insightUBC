@@ -1,16 +1,8 @@
-import {
-	IInsightFacade,
-	InsightDataset,
-	InsightDatasetKind,
-	InsightError,
-	InsightResult,
-	NotFoundError,
-	ResultTooLargeError,
-} from "./IInsightFacade";
-import * as fs from "fs-extra";
 import JSZip from "jszip";
 import {parse} from "parse5";
 import * as http from "http";
+import {InsightDataset, InsightDatasetKind} from "./IInsightFacade";
+import {saveFileToDisk} from "./AddDatasetUtils";
 
 export default class RoomsController {
 	private buildings: object[];
@@ -25,10 +17,11 @@ export default class RoomsController {
 		this.finalBuildings = [];
 	}
 
-	public async addRoomsDataset(id: string, content: string): Promise<string[]> {
+	public async addRoomsDataset(id: string, content: string): Promise<string> {
         // Unzip valid files
 		const jsZip = new JSZip();
 		let parsedIndexFile: any;
+		let roomsDatasetIds: string[] = [];
 
 		return jsZip.loadAsync(content, {base64: true}).then((zip: any) => {
 			const promiseArr: any[] = [];
@@ -61,8 +54,16 @@ export default class RoomsController {
 		}).then((geoLocResults: object[]) => {
 			this.getFinalBuildings(geoLocResults, id);
 			const roomsDataWithNames = this.addBuildingNamesToRooms(id);
-			console.log(roomsDataWithNames);
-			return Promise.resolve([]);
+
+			const datasetInfo: InsightDataset = {
+				id,
+				kind: InsightDatasetKind.Rooms,
+				numRows: roomsDataWithNames.length,
+			};
+			roomsDataWithNames.push(datasetInfo);
+			saveFileToDisk(id, roomsDataWithNames);
+			// roomsDatasetIds.push(id);
+			return Promise.resolve(id);
 		});
 	}
 

@@ -11,6 +11,7 @@ import {
 } from "./IInsightFacade";
 import {filterQuery, outputQuery} from "./QueryController";
 import RoomsController from "./RoomsController";
+import {isDatasetValid, isZipValid, saveFileToDisk} from "./AddDatasetUtils";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -20,21 +21,24 @@ import RoomsController from "./RoomsController";
 export default class InsightFacade implements IInsightFacade {
 	private dataset: any[];
 	private course: object[];
+	private sectionsDatasetIds: string[];
 	private allDatasetIds: string[];
-	private error: string;
 	private jsonKeys: string[];
-	private datasetKeys: string[];
+	private sectionsKeys: string[];
+	private roomsKeys: string[];
 	private id: string;
 	private numSections: number;
 
 	constructor() {
 		this.dataset = [];
 		this.course = [];
+		this.sectionsDatasetIds = [];
 		this.allDatasetIds = [];
-		this.error = "";
 		this.jsonKeys = ["Subject", "Course", "Avg", "Professor", "Title", "Pass", "Fail", "Audit", "id", "Year",
 			"Section"];
-		this.datasetKeys = ["dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
+		this.sectionsKeys = ["dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
+		this.roomsKeys = ["fullname", "shortname", "number", "name", "address", "lat", "lon", "seats",
+						  "type", "furniture", "href"];
 		this.id = "";
 		this.numSections = 0;
 	}
@@ -42,100 +46,56 @@ export default class InsightFacade implements IInsightFacade {
 											/** addDataset Methods **/
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		// Reset dataset array
-		this.dataset = [];
-		// Reset numSections count
-		this.numSections = 0;
-
-		if (kind === InsightDatasetKind.Rooms) {
-			let roomsController = new RoomsController();
-			return roomsController.addRoomsDataset(id, content);
+		if (isDatasetValid(id, kind, this.allDatasetIds) !== "") {
+			return Promise.reject(new InsightError(`Invalid dataset ${isDatasetValid(id, kind, this.allDatasetIds)}`));
 		}
-
-		if (!this.isDatasetValid(id, content, kind)) {
-			return Promise.reject(new InsightError(`Invalid dataset ${this.error}`));
-		}
-		// Unzip valid files
-		const jsZip = new JSZip();
-		return jsZip.loadAsync(content, {base64: true}).then((zip) => {
-			const zipData: any[] = [];
-			if (!this.isZipValid(zip)) {
-				return Promise.reject(new InsightError(`Invalid dataset ${this.error}`));
+		return new Promise<string> ((resolve, reject) => {
+			if (kind === InsightDatasetKind.Rooms) {
+				let roomsController = new RoomsController();
+				resolve(roomsController.addRoomsDataset(id, content));
+			} else {
+				this.dataset = [];
+				this.numSections = 0;
+				const jsZip = new JSZip();
+				return jsZip.loadAsync(content, {base64: true}).then((zip) => {
+					const zipData: any[] = [];
+					if (isZipValid(zip, kind) !== "") {
+						reject(new InsightError(`Invalid dataset ${isZipValid(zip, kind)}`));
+					}
+					zip.folder("courses")?.forEach((_, zipObj) => {
+						zipData.push(zipObj.async("text"));
+					});
+					return Promise.all(zipData.slice(1));
+				}).then((zipData: any[]) => {
+					zipData.forEach((data: any) => {
+						this.course = [];
+						this.parseJsonObject(data, id);
+						if (this.course.length !== 0) {
+							this.dataset.push(this.course);
+						}
+					});
+					if (this.dataset.length === 0) {
+						return reject(new InsightError("Dataset Empty"));
+					}
+					const datasetInfo: InsightDataset = {
+						id,
+						kind: InsightDatasetKind.Sections,
+						numRows: this.numSections,
+					};
+					this.dataset.push(datasetInfo);
+					// this.sectionsDatasetIds.push(id);
+					saveFileToDisk(id, this.dataset);
+					// console.log(this.sectionsDatasetIds);
+					resolve(id);
+				}).catch((err) => {
+					reject(new InsightError(err));
+				});
 			}
-			zip.folder("courses")?.forEach((_, zipObj) => {
-				zipData.push(zipObj.async("text"));
-			});
-			return (zipData.length === 0) ?
-				Promise.reject(new InsightError("Dataset empty 1")) : Promise.all(zipData.slice(1));
-		}).then((zipData: any[]) => {
-			zipData.forEach((data: any) => {
-				this.course = [];
-				this.parseJsonObject(data, id);
-				if (this.course.length !== 0) {
-					this.dataset.push(this.course);
-				}
-			});
-			if (this.dataset.length === 0) {
-				return Promise.reject(new InsightError("Dataset Empty"));
-			}
-			const datasetInfo: InsightDataset = {
-				id,
-				kind: InsightDatasetKind.Sections,
-				numRows: this.numSections,
-			};
-			this.dataset.push(datasetInfo);
-
-			this.allDatasetIds.push(id);
-			this.saveFileToDisk(id);
+		}).then((datasetId: string) => {
+			// this.allDatasetIds = [];
+			this.allDatasetIds.push(datasetId);
 			return Promise.resolve(this.allDatasetIds);
-		}).catch((err) => {
-			return Promise.reject(new InsightError(err));
 		});
-	}
-
-	// Helper function to save file to disk (__dir/data)
-	private saveFileToDisk(id: string): void {
-		if (!fs.existsSync(path.resolve(__dirname, "../../data"))) {
-			fs.mkdirSync(path.resolve(__dirname, "../../data"));
-		}
-		fs.writeFileSync(path.resolve(__dirname, `../../data/${id}.json`),
-			JSON.stringify(this.dataset));
-	}
-
-	private isDatasetValid(id: string, content: string, kind: InsightDatasetKind): boolean {
-		// Check for valid id
-		if (id.includes("_") || id.trim().length === 0 || id === "" || id === null || id === undefined ||
-			this.allDatasetIds.includes(id)) {
-			this.error = "id";
-			return false;
-		}
-		// check for Sections kind
-		if (kind !== InsightDatasetKind.Sections) {
-			this.error = "kind";
-			return false;
-		}
-		this.error = "";
-		return true;
-	}
-
-	// Helper function to check if zip file is valid
-	private isZipValid(zip: JSZip): boolean {
-		// check for courses folder
-		if (!Object.keys(zip.files).includes("courses/")) {
-			this.error = "no courses folder";
-			return false;
-		}
-		// check for at least one section in courses folder
-		let filenames: string[] = [];
-		zip.folder("courses")?.forEach((filename) => {
-			filenames.push(filename);
-		});
-		if (filenames.length === 0) {
-			this.error = "zip folder empty";
-			return false;
-		}
-		this.error = "";
-		return true;
 	}
 
 	// Helper function to parse JSON and create section object and course array
@@ -265,7 +225,9 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			keys.push(column.split("_")[1]);
 		});
-		if (!keys.every((key) => this.datasetKeys.includes(key))) {
+
+		if (!keys.every((key) => this.sectionsKeys.includes(key)) &&
+			!keys.every((key) => this.roomsKeys.includes(key))) {
 			return false;
 		}
 		if (Object.keys(queryOptions).includes("ORDER")) {

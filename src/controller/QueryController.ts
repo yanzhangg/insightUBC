@@ -19,14 +19,21 @@ export function filterQuery(whereObject: object, id: string): Promise<InsightRes
 
 	const rawDataset = fs.readFileSync(`data/${id}.json`);
 	const dataset = JSON.parse(rawDataset.toString());
-	const datasetOnly: object[][] = dataset.slice(0, -1);
+	const datasetOnly: any = dataset.slice(0, -1);
+	const listDatasetInfo: InsightDataset = dataset.pop();
+	const datasetKind: InsightDatasetKind = listDatasetInfo.kind;
 
 	let filteredArr: InsightResult[] = [];
-	datasetOnly.forEach((course: object[]) => {
-		Array.from(course).forEach((section: any) => {
-			filteredArr.push(section);
+
+	if (datasetKind === InsightDatasetKind.Sections) {
+		datasetOnly.forEach((course: object[]) => {
+			Array.from(course).forEach((section: any) => {
+				filteredArr.push(section);
+			});
 		});
-	});
+	} else if (datasetKind === InsightDatasetKind.Rooms) {
+		filteredArr = datasetOnly;
+	}
 
 	if (Object.keys(whereObject).length === 0) {
 		return Promise.resolve(filteredArr);
@@ -94,8 +101,9 @@ export function checkType(queryObj: object): boolean {
 	const value: number | string = Object.values(queryObj)[0];
 
 	let field: string = key.split("_")[1];
-	const stringKeys: string[] = ["dept", "id", "title", "instructor", "uuid"];
-	const numKeys: string[] = ["avg", "pass", "fail", "audit", "year"];
+	const stringKeys: string[] = ["dept", "id", "title", "instructor", "uuid", "fullname", "shortname",
+								  "number", "name", "address", "type", "furniture", "href"];
+	const numKeys: string[] = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
 	if (stringKeys.includes(field)) {
 		return typeof value === "string";
 	} else if (numKeys.includes(field)) {
