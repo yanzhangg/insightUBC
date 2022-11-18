@@ -10,6 +10,24 @@ import {
 	NotFoundError,
 } from "./IInsightFacade";
 
+export const roomKeys: string[] = [
+	"fullname", "shortname", "number", "name", "address", "lat", "lon", "seats", "type", "furniture", "href"];
+
+export const sectionKeys: string[] = [
+	"dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
+
+export const queryApplyTokens: string[] = [
+	"MAX", "MIN", "AVG", "COUNT", "SUM"
+];
+
+export const stringKeys: string[] = [
+	"dept", "id", "title", "instructor", "uuid", "fullname", "shortname", "number",
+	"name", "address", "type", "furniture", "href"
+];
+export const numKeys: string[] = [
+	"avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"
+];
+
 // Helper function to save file to disk (__dir/data)
 export function saveFileToDisk(id: string, dataset: any[]): void {
 	if (!fs.existsSync(path.resolve(__dirname, "../../data"))) {

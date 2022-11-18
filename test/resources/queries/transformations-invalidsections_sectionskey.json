@@ -1,0 +1,25 @@
+{
+    "title": "invalid query with invalid rooms_sectionskey",
+    "input":
+    {
+        "WHERE": {},
+        "OPTIONS": {
+          "COLUMNS": [
+            "rooms_title",
+            "overall_Avg"
+          ]
+        },
+        "TRANSFORMATIONS": {
+          "GROUP": ["rooms_title", "rooms_name"],
+          "APPLY": [
+            {
+              "overall_Avg": {
+                "AVG": "rooms_avg"
+              }
+            }
+          ]
+        }
+    },
+    "errorExpected": true,
+    "expected": "InsightError"
+  }

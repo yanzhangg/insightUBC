@@ -10,13 +10,13 @@ import {
 } from "./IInsightFacade";
 import * as fs from "fs-extra";
 import path from "path";
+import {sectionKeys, roomKeys, stringKeys, numKeys} from "./AddDatasetUtils";
 
 // Performs query based on filters in the body of given query
 export function filterQuery(whereObject: object, id: string): Promise<InsightResult[]> {
 	if (!fs.existsSync(path.resolve(__dirname, `../../data/${id}.json`))) {
 		return Promise.reject(new InsightError("Dataset does not exist"));
 	}
-
 	const rawDataset = fs.readFileSync(`data/${id}.json`);
 	const dataset = JSON.parse(rawDataset.toString());
 	const datasetOnly: any = dataset.slice(0, -1);
@@ -34,28 +34,27 @@ export function filterQuery(whereObject: object, id: string): Promise<InsightRes
 	} else if (datasetKind === InsightDatasetKind.Rooms) {
 		filteredArr = datasetOnly;
 	}
-
 	if (Object.keys(whereObject).length === 0) {
 		return Promise.resolve(filteredArr);
 	}
-	let filteredResult: InsightResult[] | InsightError = recurse(whereObject, filteredArr, id);
+	let filteredResult: InsightResult[] | InsightError = recurse(whereObject, filteredArr, id, datasetKind);
 	if (filteredResult instanceof InsightError) {
 		return Promise.reject(filteredResult);
 	}
 	return Promise.resolve(filteredResult);
 }
 
-export function recurse(obj: object, datasetArr: InsightResult[], id: string): InsightResult[] | InsightError {
-	const whereKey = Object.keys(obj)[0];
-	const whereValue = obj[whereKey as keyof object];
+export function recurse(obj: object, datasetArr: InsightResult[], id: string, kind: InsightDatasetKind):
+InsightResult[] | InsightError {
+	const whereKey = Object.keys(obj)[0], whereValue = obj[whereKey as keyof object];
 	if (whereKey === "IS") {
-		const errorStr = checkWhereValue(whereValue, id);
+		const errorStr = checkWhereValue(whereValue, id, kind);
 		if (errorStr !== "") {
 			return new InsightError(errorStr);
 		}
 		return sComparison(datasetArr, whereValue);
 	} else if (whereKey === "LT" || whereKey === "GT" || whereKey === "EQ") {
-		const errorStr = checkWhereValue(whereValue, id);
+		const errorStr = checkWhereValue(whereValue, id, kind);
 		if (errorStr !== "") {
 			return new InsightError(errorStr);
 		}
@@ -69,7 +68,7 @@ export function recurse(obj: object, datasetArr: InsightResult[], id: string): I
 		let finalResult: InsightResult[] | InsightError = [];
 		let resultsArr: InsightResult[][] = [];
 		Array.from(whereValue).forEach((filterObj) => {
-			let filterObjResult: InsightResult[] | InsightError = recurse(filterObj as object, datasetArr, id);
+			let filterObjResult: InsightResult[] | InsightError = recurse(filterObj as object, datasetArr, id, kind);
 			if (filterObjResult instanceof InsightError) {
 				finalResult = filterObjResult;
 				return;
@@ -90,7 +89,7 @@ export function recurse(obj: object, datasetArr: InsightResult[], id: string): I
 		}
 		return finalResult;
 	} else if (whereKey === "NOT") {
-		return notFilter(whereValue, datasetArr, id);
+		return notFilter(whereValue, datasetArr, id, kind);
 	} else {
 		return new InsightError("Invalid query filter");
 	}
@@ -99,11 +98,7 @@ export function recurse(obj: object, datasetArr: InsightResult[], id: string): I
 export function checkType(queryObj: object): boolean {
 	const key: string = Object.keys(queryObj)[0];
 	const value: number | string = Object.values(queryObj)[0];
-
 	let field: string = key.split("_")[1];
-	const stringKeys: string[] = ["dept", "id", "title", "instructor", "uuid", "fullname", "shortname",
-								  "number", "name", "address", "type", "furniture", "href"];
-	const numKeys: string[] = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
 	if (stringKeys.includes(field)) {
 		return typeof value === "string";
 	} else if (numKeys.includes(field)) {
@@ -112,9 +107,23 @@ export function checkType(queryObj: object): boolean {
 	return false;
 }
 
-export function checkWhereValue(whereValue: object, id: string): string {
+export function checkKeyKind(queryObj: object, datasetKind: InsightDatasetKind): boolean {
+	const key: string = Object.keys(queryObj)[0];
+	let field: string = key.split("_")[1];
+	if (datasetKind === InsightDatasetKind.Rooms) {
+		return roomKeys.includes(field);
+	} else if (datasetKind === InsightDatasetKind.Sections) {
+		return sectionKeys.includes(field);
+	}
+	return false;
+}
+
+export function checkWhereValue(whereValue: object, id: string, datasetKind: InsightDatasetKind): string {
 	if (!checkType(whereValue)) {
 		return "Invalid key value type";
+	}
+	if (!checkKeyKind(whereValue, datasetKind)) {
+		return "Invalid key match with dataset kind";
 	}
 	if (Object.keys(whereValue)[0].split("_")[0] !== id) {
 		return "Invalid dataset id key";
@@ -162,9 +171,7 @@ InsightResult[] | InsightError {
 	}
 	const mkey: string = Object.keys(isObj)[0];
 	const number: number = Object.values(isObj)[0];
-
 	let filteredMComparisonArr: InsightResult[] = [];
-
 	if (mComparator === "LT") {
 		filteredMComparisonArr = getFilteredArray(datasetArr, mkey, number, "LT");
 	} else if (mComparator === "GT") {
@@ -216,17 +223,17 @@ export function compareNumberInput(sectionValue: number, operation: string, inpu
 	}
 }
 
-export function notFilter(whereValue: object, datasetArr: InsightResult[], id: string): InsightResult[] | InsightError {
+export function notFilter(whereValue: object, datasetArr: InsightResult[], id: string, datasetKind: InsightDatasetKind):
+InsightResult[] | InsightError {
 	if (Object.keys(whereValue).length === 0) {
 		return new InsightError("Empty NOT query");
 	}
-
 	if (Object.keys(Object.keys(whereValue)).length !== 1) {
 		return new InsightError("Invalid NOT Query: Excess keys");
 	}
 	let notFilterResult: InsightResult[];
 	let filterResult: InsightResult[] | InsightError;
-	filterResult = recurse(whereValue, datasetArr, id);
+	filterResult = recurse(whereValue, datasetArr, id, datasetKind);
 	if (filterResult instanceof InsightError) {
 		return filterResult;
 	}
@@ -237,20 +244,16 @@ export function notFilter(whereValue: object, datasetArr: InsightResult[], id: s
 // Outputs query in the format provided by the OPTIONS
 export function outputQuery(filterResult: InsightResult[], queryOptions: object):
 Promise<InsightResult[]> {
-
 	if (filterResult.length > 5000) {
 		return Promise.reject(new ResultTooLargeError("Result too large"));
 	}
-
 	const queryColumns: string[] = queryOptions["COLUMNS" as keyof object];
-	let queryOrder: string = "";
+	let queryOrder: string | object = "";
 
 	if (Object.keys(queryOptions).includes("ORDER")) {
 		queryOrder = queryOptions["ORDER" as keyof object];
 	}
-
 	let finalResult: InsightResult[] = [];
-
 	Array.from(filterResult).forEach((object) => {
 		let objAsArray = Object.entries(object);
 		let filteredObj = objAsArray.filter(([key, value]) => queryColumns.includes(key));
@@ -260,7 +263,24 @@ Promise<InsightResult[]> {
 	});
 
 	if (queryOrder !== "") {
-		finalResult.sort((objA, objB) => objA[queryOrder] > objB[queryOrder] ? 1 : -1);
+		if (typeof queryOrder === "string") {
+			let queryOrderString = queryOrder;
+			finalResult.sort((objA, objB) => objA[queryOrderString] > objB[queryOrderString] ? 1 : -1);
+		} else {
+			let orderDir: string = queryOrder["dir" as keyof object];
+			let orderKeys: any = queryOrder["keys" as keyof object];
+			let dir = orderDir === "UP" ? 1 : -1;
+
+
+			finalResult.sort(function(a: any, b: any){
+				let i = 0, result = 0;
+				while(i < orderKeys.length && result === 0) {
+				  result = dir * (a[orderKeys[i]] < b[orderKeys[i]] ? -1 : (a[orderKeys[i]] > b[orderKeys[i]] ? 1 : 0));
+				  i++;
+				}
+				return result;
+			});
+		}
 	}
 	return Promise.resolve(finalResult);
 }

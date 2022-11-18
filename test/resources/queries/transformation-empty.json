@@ -1,0 +1,16 @@
+{
+    "title": "invalid query with empty TRANSFORMATIONS",
+    "input":
+    {
+        "WHERE": {},
+        "OPTIONS": {
+          "COLUMNS": [
+            "sections_title",
+            "overallAvg"
+          ]
+        },
+        "TRANSFORMATIONS": {}
+    },
+    "errorExpected": true,
+    "expected": "InsightError"
+  }

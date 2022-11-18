@@ -1,0 +1,33 @@
+{
+    "title": "valid query with transformations using multiple group keys",
+    "input":
+    {
+        "WHERE": {
+          "IS": {
+            "sections_title": "adul*"
+          }
+        },
+        "OPTIONS": {
+          "COLUMNS": [
+            "sections_title",
+            "sections_instructor",
+            "overallAvg"
+          ]
+        },
+        "TRANSFORMATIONS": {
+          "GROUP": [
+            "sections_title",
+            "sections_instructor"
+          ],
+          "APPLY": [
+            {
+              "overallAvg": {
+                "AVG": "sections_avg"
+              }
+            }
+          ]
+        }
+      },
+    "errorExpected": false,
+    "expected": [{"sections_title":"adul educ","sections_instructor":"","overallAvg":81.07},{"sections_title":"adul educ","sections_instructor":"falk, clifford","overallAvg":87.18},{"sections_title":"adul educ","sections_instructor":"palacios, carolina","overallAvg":76.44},{"sections_title":"adul educ","sections_instructor":"vanwynsberghe, robert","overallAvg":83.11},{"sections_title":"adults & famlies","sections_instructor":"baumbusch, jennifer;esson, lynne","overallAvg":78.86},{"sections_title":"adults & famlies","sections_instructor":"","overallAvg":81.07},{"sections_title":"adults & famlies","sections_instructor":"segaric, cheryl","overallAvg":83.34},{"sections_title":"adults & famlies","sections_instructor":"affleck, frances;foster, paula;jackson, cathryn;jetha, farah;mcburney, sheila mary;rea, gail;segaric, cheryl","overallAvg":85.02},{"sections_title":"adults & famlies","sections_instructor":"jackson, cathryn;jetha, farah;mislang, jonathan;phinney, alison;rea, gail;segaric, cheryl;valkenier, beverley","overallAvg":83.56},{"sections_title":"adults & famlies","sections_instructor":"kryworuchko, jennifer;segaric, cheryl","overallAvg":79.01}]
+}

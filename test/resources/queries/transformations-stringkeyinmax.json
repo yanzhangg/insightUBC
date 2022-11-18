@@ -1,0 +1,25 @@
+{
+    "title": "invalid query with invalid string key in AVG",
+    "input":
+    {
+        "WHERE": {},
+        "OPTIONS": {
+          "COLUMNS": [
+            "rooms_title",
+            "number_Avg"
+          ]
+        },
+        "TRANSFORMATIONS": {
+          "GROUP": ["rooms_title", "rooms_name"],
+          "APPLY": [
+            {
+              "number_Avg": {
+                "AVG": "rooms_number"
+              }
+            }
+          ]
+        }
+    },
+    "errorExpected": true,
+    "expected": "InsightError"
+  }

@@ -1,0 +1,27 @@
+{
+	"title": "invalid sections_roomkey in WHERE",
+	"input": {
+		"WHERE": {
+            "AND": [
+                {
+                    "GT": {
+                        "sections_avg": 97
+                    }
+                },
+                {
+                    "GT": {
+                        "sections_lat": 100
+                    }
+                }
+            ]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

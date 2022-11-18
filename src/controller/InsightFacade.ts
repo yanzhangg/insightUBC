@@ -1,4 +1,4 @@
-import JSZip, {file} from "jszip";
+import JSZip from "jszip";
 import * as fs from "fs-extra";
 import path from "path";
 import {
@@ -11,7 +11,8 @@ import {
 } from "./IInsightFacade";
 import {filterQuery, outputQuery} from "./QueryController";
 import RoomsController from "./RoomsController";
-import {isDatasetValid, isZipValid, saveFileToDisk} from "./AddDatasetUtils";
+import {isDatasetValid, isZipValid, saveFileToDisk, sectionKeys, roomKeys} from "./AddDatasetUtils";
+import {isQueryTransformationValid, transformQuery} from "./TransformQueryController";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -21,24 +22,19 @@ import {isDatasetValid, isZipValid, saveFileToDisk} from "./AddDatasetUtils";
 export default class InsightFacade implements IInsightFacade {
 	private dataset: any[];
 	private course: object[];
-	private sectionsDatasetIds: string[];
 	private allDatasetIds: string[];
 	private jsonKeys: string[];
-	private sectionsKeys: string[];
-	private roomsKeys: string[];
+	private orderDirs: string[];
 	private id: string;
 	private numSections: number;
 
 	constructor() {
 		this.dataset = [];
 		this.course = [];
-		this.sectionsDatasetIds = [];
 		this.allDatasetIds = [];
 		this.jsonKeys = ["Subject", "Course", "Avg", "Professor", "Title", "Pass", "Fail", "Audit", "id", "Year",
 			"Section"];
-		this.sectionsKeys = ["dept", "id", "avg", "instructor", "title", "pass", "fail", "audit", "uuid", "year"];
-		this.roomsKeys = ["fullname", "shortname", "number", "name", "address", "lat", "lon", "seats",
-						  "type", "furniture", "href"];
+		this.orderDirs = ["UP", "DOWN"];
 		this.id = "";
 		this.numSections = 0;
 	}
@@ -52,7 +48,7 @@ export default class InsightFacade implements IInsightFacade {
 		return new Promise<string> ((resolve, reject) => {
 			if (kind === InsightDatasetKind.Rooms) {
 				let roomsController = new RoomsController();
-				resolve(roomsController.addRoomsDataset(id, content));
+				return resolve(roomsController.addRoomsDataset(id, content));
 			} else {
 				this.dataset = [];
 				this.numSections = 0;
@@ -83,12 +79,10 @@ export default class InsightFacade implements IInsightFacade {
 						numRows: this.numSections,
 					};
 					this.dataset.push(datasetInfo);
-					// this.sectionsDatasetIds.push(id);
 					saveFileToDisk(id, this.dataset);
-					// console.log(this.sectionsDatasetIds);
-					resolve(id);
+					return resolve(id);
 				}).catch((err) => {
-					reject(new InsightError(err));
+					return reject(new InsightError(err));
 				});
 			}
 		}).then((datasetId: string) => {
@@ -147,7 +141,6 @@ export default class InsightFacade implements IInsightFacade {
 		if (!fs.existsSync(path.resolve(__dirname, `../../data/${id}.json`))) {
 			return Promise.reject(new NotFoundError("No dataset with this id"));
 		}
-
 		fs.unlinkSync(`data/${id}.json`);
 		const idIndex = this.allDatasetIds.findIndex((idString) => {
 			return idString === id;
@@ -186,14 +179,30 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		const queryWhere: object = queryObject["WHERE" as keyof object];
 		const queryOptions: object = queryObject["OPTIONS" as keyof object];
+		let queryTransformation: object = {};
 
+		if (queryObject["TRANSFORMATIONS" as keyof object]) {
+			queryTransformation = queryObject["TRANSFORMATIONS" as keyof object];
+			if (!isQueryTransformationValid(queryTransformation)) {
+				return Promise.reject(new InsightError("Invalid Query: transformations"));
+			}
+		}
 		if (!this.isQueryWhereValid(queryWhere)) {
 			return Promise.reject(new InsightError("Invalid Query: where"));
 		}
 		if (!this.isQueryOptionsValid(queryOptions)) {
 			return Promise.reject(new InsightError("Invalid Query: options"));
 		}
-		return filterQuery(queryWhere, this.id).then((result) => outputQuery(result, queryOptions));
+		return filterQuery(queryWhere, this.id).then((result) => {
+			let unsortedResult: InsightResult[] | InsightError = result;
+			if (Object.keys(queryTransformation).length !== 0) {
+				unsortedResult = transformQuery(queryTransformation, result, queryOptions["COLUMNS" as keyof object]);
+				if (unsortedResult instanceof InsightError) {
+					return Promise.reject(unsortedResult);
+				}
+			}
+			return outputQuery(unsortedResult, queryOptions);
+		});
 	}
 
 	private isQueryValid(query: object): boolean {
@@ -223,33 +232,62 @@ export default class InsightFacade implements IInsightFacade {
 			if (typeof column !== "string") {
 				return false;
 			}
-			keys.push(column.split("_")[1]);
+			if (column.includes("_")) {
+				keys.push(column.split("_")[1]);
+			}
 		});
-
-		if (!keys.every((key) => this.sectionsKeys.includes(key)) &&
-			!keys.every((key) => this.roomsKeys.includes(key))) {
+		if (!keys.every((key) => sectionKeys.includes(key)) &&
+			!keys.every((key) => roomKeys.includes(key))) {
 			return false;
 		}
 		if (Object.keys(queryOptions).includes("ORDER")) {
-			let optionsOrder: string = queryOptions["ORDER" as keyof object];
-			if (!optionsColumns.includes(optionsOrder) || optionsOrder === null ||
-				optionsOrder === undefined || typeof optionsOrder !== "string" ) {
+			if (!this.checkOptionsOrder(queryOptions, optionsColumns)) {
 				return false;
 			}
 		}
 		let columns: string[] = [];
 		optionsColumns.map((column) => {
-			let columnId = column.split("_")[0];
-			if (columnId.includes("_")) {
-				return false;
+			if (column.includes("_")) {
+				let columnId = column.split("_")[0];
+				if (columnId.includes("_")) {
+					return false;
+				}
+				columns.push(columnId);
 			}
-			columns.push(columnId);
 		});
 		if (!columns.every((column) => column === columns[0]) ||
 			!fs.existsSync(path.resolve(__dirname, `../../data/${columns[0]}.json`))) {
 			return false;
 		}
 		this.id = columns[0];
+		return true;
+	}
+
+	private checkOptionsOrder(queryOptions: object, optionsColumns: string[]): boolean {
+		let optionsOrder: string | object = queryOptions["ORDER" as keyof object];
+		if (optionsOrder === null || optionsOrder === undefined) {
+			return false;
+		}
+		if (typeof optionsOrder === "string") {
+			if (!optionsColumns.includes(optionsOrder)) {
+				return false;
+			}
+		} else if (typeof optionsOrder === "object") {
+			if (Object.keys(optionsOrder).length > 2 || !Object.keys(optionsOrder).includes("dir") ||
+				!Object.keys(optionsOrder).includes("keys") ) {
+				return false;
+			}
+			let orderDir: string = optionsOrder["dir" as keyof object];
+			let orderKeys: any = optionsOrder["keys" as keyof object];
+			if (orderDir === null || orderDir === undefined || typeof orderDir !== "string" ||
+				!this.orderDirs.includes(orderDir)) {
+				return false;
+			}
+			if (orderKeys === null || orderKeys === undefined || !Array.isArray(orderKeys) ||
+				!orderKeys.every((key: any) => optionsColumns.includes(key))) {
+				return false;
+			}
+		}
 		return true;
 	}
 
