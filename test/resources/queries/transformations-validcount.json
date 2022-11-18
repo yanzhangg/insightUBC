@@ -1,0 +1,33 @@
+{
+    "title": "valid query using COUNT",
+    "input":
+    {
+      "WHERE": {
+        "IS": {
+          "rooms_name": "C*"
+        }
+      },
+      "OPTIONS": {
+        "COLUMNS": [
+          "rooms_name",
+          "numberCount"
+        ],
+          "ORDER": "rooms_name"
+      },
+      "TRANSFORMATIONS": {
+        "GROUP": [
+          "rooms_furniture",
+          "rooms_name"
+        ],
+        "APPLY": [
+          {
+            "numberCount": {
+              "COUNT": "rooms_name"
+            }
+          }
+        ]
+      }
+    },
+    "errorExpected": false,
+    "expected": [{"rooms_name":"CEME_1202","numberCount":1},{"rooms_name":"CEME_1204","numberCount":1},{"rooms_name":"CEME_1206","numberCount":1},{"rooms_name":"CEME_1210","numberCount":1},{"rooms_name":"CEME_1212","numberCount":1},{"rooms_name":"CEME_1215","numberCount":1},{"rooms_name":"CHBE_101","numberCount":1},{"rooms_name":"CHBE_102","numberCount":1},{"rooms_name":"CHBE_103","numberCount":1},{"rooms_name":"CHEM_B150","numberCount":1},{"rooms_name":"CHEM_B250","numberCount":1},{"rooms_name":"CHEM_C124","numberCount":1},{"rooms_name":"CHEM_C126","numberCount":1},{"rooms_name":"CHEM_D200","numberCount":1},{"rooms_name":"CHEM_D300","numberCount":1},{"rooms_name":"CIRS_1250","numberCount":1}]
+  }

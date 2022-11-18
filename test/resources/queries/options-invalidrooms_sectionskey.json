@@ -1,0 +1,27 @@
+{
+	"title": "invalid query with rooms_sectionskey",
+	"input": {
+        "WHERE": {
+          "AND": [
+            {
+              "IS": {
+                "rooms_furniture": "*Tables*"
+              }
+            },
+            {
+              "GT": {
+                "rooms_avg": 90
+              }
+            }
+          ]
+        },
+        "OPTIONS": {
+          "COLUMNS": [
+            "rooms_shortname",
+            "rooms_avg"
+          ]
+        }
+      },
+    "errorExpected": true,
+    "expected": "InsightError"
+}

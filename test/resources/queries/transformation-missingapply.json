@@ -1,0 +1,18 @@
+{
+    "title": "invalid query with missing APPLY",
+    "input":
+    {
+        "WHERE": {},
+        "OPTIONS": {
+          "COLUMNS": [
+            "sections_title",
+            "overallAvg"
+          ]
+        },
+        "TRANSFORMATIONS": {
+          "GROUP": ["sections_title"]
+        }
+    },
+    "errorExpected": true,
+    "expected": "InsightError"
+  }
