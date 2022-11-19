@@ -1,8 +1,8 @@
 import JSZip from "jszip";
 import {parse} from "parse5";
 import * as http from "http";
-import {InsightDataset, InsightDatasetKind} from "./IInsightFacade";
-import {saveFileToDisk} from "./AddDatasetUtils";
+import {InsightDataset, InsightDatasetKind, InsightError} from "./IInsightFacade";
+import {saveFileToDisk, isZipValid, roomKeys} from "./AddDatasetUtils";
 
 export default class RoomsController {
 	private buildings: object[];
@@ -24,6 +24,9 @@ export default class RoomsController {
 		let roomsDatasetIds: string[] = [];
 
 		return jsZip.loadAsync(content, {base64: true}).then((zip: any) => {
+			if (!isZipValid(zip, InsightDatasetKind.Rooms)) {
+				return Promise.reject(new InsightError("Error: Invalid Rooms Zip file"));
+			}
 			const promiseArr: any[] = [];
 			promiseArr.push(zip.file("index.htm")?.async("text"));
 			zip.folder("campus")?.folder("discover")?.folder("buildings-and-classrooms")?.
@@ -62,8 +65,9 @@ export default class RoomsController {
 			};
 			roomsDataWithNames.push(datasetInfo);
 			saveFileToDisk(id, roomsDataWithNames);
-			// roomsDatasetIds.push(id);
 			return Promise.resolve(id);
+		}).catch((err) => {
+			return Promise.reject(new InsightError(err));
 		});
 	}
 
@@ -98,16 +102,9 @@ export default class RoomsController {
 		this.buildings.push(building);
 	}
 
-	private checkValidLinks(links: any[], zip: JSZip) {
-		return true;
-	}
-
 	private getBuildingAttributes(td: any, building: any, id: string): object {
 		td.attrs.forEach((attr: any) => {
-			let shortNameVal: string = "";
-			let addressVal: string = "";
-			let fullNameVal: string = "";
-
+			let shortNameVal: string = "", addressVal: string = "", fullNameVal: string = "";
 			if (attr.value === "views-field views-field-title") {
 				let aNodeArr = this.filterByNodeName(td, "a");
 				if (aNodeArr.length > 0) {
@@ -213,7 +210,6 @@ export default class RoomsController {
 			let slashIndex = roomHref.lastIndexOf("/");
 			let dashIndex = roomHref.lastIndexOf("-");
 			let roomShortName = roomHref.substring(slashIndex + 1, dashIndex);
-
 			if (buildingsMap.has(roomShortName)) {
 				// find building in buildingsMap
 				const buildingInfo: any = buildingsMap.get(roomShortName);
@@ -229,6 +225,11 @@ export default class RoomsController {
 					roomsInBuildings.push(newRoom);
 				}
 			}
+		});
+		roomsInBuildings.filter((room) => Object.keys(room).length === 0);
+		roomsInBuildings.filter((room: any) => {
+			let onlyKeys = Object.keys(room).map((key: string) => key.split("_")[1]);
+			return !onlyKeys.every((key) => roomKeys.includes(key));
 		});
 		return roomsInBuildings;
 	}

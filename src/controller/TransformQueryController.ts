@@ -1,21 +1,20 @@
 import {
-	IInsightFacade,
-	InsightDataset,
-	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	NotFoundError,
-	ResultTooLargeError,
 } from "./IInsightFacade";
 import {roomKeys, sectionKeys, queryApplyTokens, numKeys} from "./AddDatasetUtils";
 import Decimal from "decimal.js";
-export function transformQuery(queryTransform: object, queryResult: any, optionsColumns: []):
+export function transformQuery(queryTransform: object, queryResult: any, optionsColumns: [], datasetId: string):
 InsightResult[] | InsightError {
 	const transformGroup: any = queryTransform["GROUP" as keyof object]; // array of groupings ["sections_title"]
 	const transformApply: any = queryTransform["APPLY" as keyof object];
 	let groupedObj: object = groupBy(queryResult, transformGroup);
 	let allGroupedArrays: any[] = [];
 	let groupedArr: any = iterateThroughObj(groupedObj, allGroupedArrays);
+
+	if (!isDatasetIdValid(datasetId, transformGroup, transformApply)) {
+		return new InsightError("Dataset id mismatch in GROUP or APPLY");
+	}
 
 	let applyKeys = applyTransformation(groupedArr, transformApply);
 
@@ -28,6 +27,22 @@ InsightResult[] | InsightError {
 		finalGroupArr.push(groupArr[0]);
 	});
 	return finalGroupArr;
+}
+
+function isDatasetIdValid(datasetId: string, transformGroup: string[], transformApply: object[]): boolean {
+	for (const key of transformGroup) {
+		if (key.split("_")[0] !== datasetId) {
+			return false;
+		}
+	}
+	for (const applyRule of transformApply) {
+		const applyRuleObject: object = Object.values(applyRule)[0];
+		const applyRuleValue: string = Object.values(applyRuleObject)[0];
+		if (applyRuleValue.split("_")[0] !== datasetId) {
+			return false;
+		}
+	}
+	return true;
 }
 
 function groupBy(queryResult: InsightResult[], keys: string[]): object {
