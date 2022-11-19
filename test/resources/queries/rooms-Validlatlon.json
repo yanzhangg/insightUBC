@@ -1,0 +1,101 @@
+{
+	"title": "rooms-validlatlon",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"rooms_name": "C*"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_name",
+				"rooms_lat",
+				"rooms_lon"
+			],
+			"ORDER": "rooms_name"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_name": "CEME_1202",
+			"rooms_lat": 49.26273,
+			"rooms_lon": -123.24894
+		},
+		{
+			"rooms_name": "CEME_1204",
+			"rooms_lat": 49.26273,
+			"rooms_lon": -123.24894
+		},
+		{
+			"rooms_name": "CEME_1206",
+			"rooms_lat": 49.26273,
+			"rooms_lon": -123.24894
+		},
+		{
+			"rooms_name": "CEME_1210",
+			"rooms_lat": 49.26273,
+			"rooms_lon": -123.24894
+		},
+		{
+			"rooms_name": "CEME_1212",
+			"rooms_lat": 49.26273,
+			"rooms_lon": -123.24894
+		},
+		{
+			"rooms_name": "CEME_1215",
+			"rooms_lat": 49.26273,
+			"rooms_lon": -123.24894
+		},
+		{
+			"rooms_name": "CHBE_101",
+			"rooms_lat": 49.26228,
+			"rooms_lon": -123.24718
+		},
+		{
+			"rooms_name": "CHBE_102",
+			"rooms_lat": 49.26228,
+			"rooms_lon": -123.24718
+		},
+		{
+			"rooms_name": "CHBE_103",
+			"rooms_lat": 49.26228,
+			"rooms_lon": -123.24718
+		},
+		{
+			"rooms_name": "CHEM_B150",
+			"rooms_lat": 49.2659,
+			"rooms_lon": -123.25308
+		},
+		{
+			"rooms_name": "CHEM_B250",
+			"rooms_lat": 49.2659,
+			"rooms_lon": -123.25308
+		},
+		{
+			"rooms_name": "CHEM_C124",
+			"rooms_lat": 49.2659,
+			"rooms_lon": -123.25308
+		},
+		{
+			"rooms_name": "CHEM_C126",
+			"rooms_lat": 49.2659,
+			"rooms_lon": -123.25308
+		},
+		{
+			"rooms_name": "CHEM_D200",
+			"rooms_lat": 49.2659,
+			"rooms_lon": -123.25308
+		},
+		{
+			"rooms_name": "CHEM_D300",
+			"rooms_lat": 49.2659,
+			"rooms_lon": -123.25308
+		},
+		{
+			"rooms_name": "CIRS_1250",
+			"rooms_lat": 49.26207,
+			"rooms_lon": -123.25314
+		}
+	]
+}

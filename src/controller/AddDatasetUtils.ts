@@ -67,6 +67,23 @@ export function isZipValid(zip: JSZip, kind: InsightDatasetKind): string {
 		if (filenames.length === 0) {
 			error = "zip folder empty";
 		}
+	} else if (kind === InsightDatasetKind.Rooms) {
+		if (!Object.keys(zip.files).includes("campus/") ||
+			!Object.keys(zip.files).includes("discover/") ||
+			!Object.keys(zip.files).includes("buildings-and-classrooms/") ||
+			!Object.keys(zip.files).includes("index.htm")) {
+			error = "missing folder or index.htm";
+		}
+		let rooms: string[] = [];
+		zip.folder("campus")?.folder("discover")?.folder("buildings-and-classrooms")?.
+			forEach((filename: string) => {
+				rooms.push(filename);
+			});
+		if (rooms.length === 0) {
+			error = "rooms zip folder empty";
+		}
+	} else {
+		error = "Invalid Dataset Kind";
 	}
 	return error;
 }

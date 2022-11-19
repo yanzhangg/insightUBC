@@ -86,7 +86,6 @@ export default class InsightFacade implements IInsightFacade {
 				});
 			}
 		}).then((datasetId: string) => {
-			// this.allDatasetIds = [];
 			this.allDatasetIds.push(datasetId);
 			return Promise.resolve(this.allDatasetIds);
 		});
@@ -196,7 +195,8 @@ export default class InsightFacade implements IInsightFacade {
 		return filterQuery(queryWhere, this.id).then((result) => {
 			let unsortedResult: InsightResult[] | InsightError = result;
 			if (Object.keys(queryTransformation).length !== 0) {
-				unsortedResult = transformQuery(queryTransformation, result, queryOptions["COLUMNS" as keyof object]);
+				unsortedResult = transformQuery(queryTransformation, result,
+					queryOptions["COLUMNS" as keyof object], this.id);
 				if (unsortedResult instanceof InsightError) {
 					return Promise.reject(unsortedResult);
 				}
