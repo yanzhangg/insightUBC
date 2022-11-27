@@ -1,6 +1,9 @@
 import express, {Application, Request, Response} from "express";
 import * as http from "http";
 import cors from "cors";
+import {InsightDataset, InsightDatasetKind, InsightError, InsightResult, NotFoundError}
+	from "../controller/IInsightFacade";
+import InsightFacade from "../controller/InsightFacade";
 
 export default class Server {
 	private readonly port: number;
@@ -85,7 +88,10 @@ export default class Server {
 		this.express.get("/echo/:msg", Server.echo);
 
 		// TODO: your other endpoints should go here
-
+		this.express.put("/dataset/:id/:kind", Server.putHandler);
+		this.express.delete("/dataset/:id", Server.deleteHandler);
+		this.express.post("/query", Server.postHandler);
+		this.express.get("/datasets", Server.getHandler);
 	}
 
 	// The next two methods handle the echo service.
@@ -106,6 +112,78 @@ export default class Server {
 			return `${msg}...${msg}`;
 		} else {
 			return "Message not provided";
+		}
+	}
+
+	private static async putHandler(req: Request, res: Response) {
+		try {
+			console.log(`Server::PUT - params: ${JSON.stringify(req.params)}`);
+			const {params, body} = req;
+			const dataBuffer: Buffer = Buffer.from(body);
+			const convertedZip = dataBuffer.toString("base64");
+
+			const insightFacade: InsightFacade = new InsightFacade();
+
+			let kind: any = params.kind;
+
+			if (params.kind === InsightDatasetKind.Rooms) {
+				kind = InsightDatasetKind.Rooms;
+			} else if (params.kind === InsightDatasetKind.Sections) {
+				kind = InsightDatasetKind.Sections;
+			}
+
+			const response: string[] = await insightFacade.addDataset(params.id, convertedZip, kind);
+			res.status(200).json({result: response});
+		} catch (err: any) {
+			res.status(400).json({error: err.message});
+		}
+	}
+
+	private static async deleteHandler(req: Request, res: Response) {
+		try {
+			console.log(`Server::DELETE - params: ${JSON.stringify(req.params)}`);
+			const {params} = req;
+
+			const insightFacade: InsightFacade = new InsightFacade();
+
+			const response: string = await insightFacade.removeDataset(params.id);
+
+			res.status(200).json({result: response});
+		} catch (err) {
+			if (err instanceof InsightError) {
+				res.status(400).json({error: err.message});
+			} else if (err instanceof NotFoundError) {
+				res.status(404).json({error: "Dataset not found"});
+			}
+		}
+	}
+
+	private static async postHandler(req: Request, res: Response) {
+		try {
+			console.log(`Server::POST - params: ${JSON.stringify(req.body)}`);
+			const {body} = req;
+
+			const insightFacade: InsightFacade = new InsightFacade();
+
+			const response: InsightResult[] = await insightFacade.performQuery(body);
+
+			res.status(200).json({result: response});
+		} catch (err: any) {
+			res.status(400).json({error: err.message});
+		}
+	}
+
+	private static async getHandler(req: Request, res: Response) {
+		try {
+			console.log(`Server::GET - params: ${JSON.stringify(req.body)}`);
+
+			const insightFacade: InsightFacade = new InsightFacade();
+
+			const response: InsightDataset[] = await insightFacade.listDatasets();
+
+			res.status(200).json({result: response});
+		} catch (err: any) {
+			console.error("Error: ", err.message);
 		}
 	}
 }
