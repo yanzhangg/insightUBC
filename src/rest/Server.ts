@@ -153,7 +153,7 @@ export default class Server {
 			if (err instanceof InsightError) {
 				res.status(400).json({error: err.message});
 			} else if (err instanceof NotFoundError) {
-				res.status(404).json({error: "Dataset not found"});
+				res.status(404).json({error: err.message});
 			}
 		}
 	}
