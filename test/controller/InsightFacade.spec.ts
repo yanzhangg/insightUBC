@@ -44,7 +44,9 @@ describe("InsightFacade", function () {
 		notZip: "./test/resources/archives/rooms-not-zip.7zip",
 		onlyIndex: "./test/resources/archives/rooms-onlyindex.zip",
 		extraRoom: "./test/resources/archives/rooms-extra-room.zip",
-		notAllFields: "./test/resources/archives/rooms-not-all-fields.zip",
+		notAllFields: "./test/resources/archives/rooms-no-roomtype-field.zip",
+		oneValidNotAllFields: "./test/resources/archives/rooms-one-valid-one-without-all-fields.zip",
+		notInIndex: "./test/resources/archives/rooms-not-in-index.zip"
 	};
 
 	before(function () {
@@ -78,6 +80,67 @@ describe("InsightFacade", function () {
 			// This runs after each test, which should make each test independent of the previous one
 			console.info(`AfterTest: ${this.currentTest?.title}`);
 			fs.removeSync(persistDirectory);
+		});
+
+		it("should not add rooms dataset if not all fields present", function () {
+			const id: string = "notAllFields";
+			const content: string = datasetContents.get("notAllFields") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Rooms)
+				.catch((err) => expect(err).to.be.instanceOf(InsightError));
+		});
+
+		it("should add valid rooms and skip room without valid fields", function () {
+			const id: string = "oneValidNotAllFields";
+			const content: string = datasetContents.get("oneValidNotAllFields") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Rooms)
+				.then(() => insightFacade.listDatasets())
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.deep.equal([
+						{
+							id: "oneValidNotAllFields",
+							kind: InsightDatasetKind.Rooms,
+							numRows: 4,
+						},
+					]);
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.be.length(1);
+
+					const [insightDataset] = insightDatasets;
+					expect(insightDataset).to.have.property("id");
+					expect(insightDataset.id).to.equal("oneValidNotAllFields");
+				})
+				.catch((err) => {
+					expect.fail("Should not fail");
+				});
+		});
+
+		it("should add rooms addDataset with WOOD not in index.htm", function () {
+			const id: string = "notInIndex";
+			const content: string = datasetContents.get("notInIndex") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Rooms)
+				.then(() => insightFacade.listDatasets())
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.deep.equal([
+						{
+							id: "notInIndex",
+							kind: InsightDatasetKind.Rooms,
+							numRows: 348,
+						},
+					]);
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.be.length(1);
+
+					const [insightDataset] = insightDatasets;
+					expect(insightDataset).to.have.property("id");
+					expect(insightDataset.id).to.equal("notInIndex");
+				})
+				.catch((err) => {
+					console.log(err.message);
+					expect.fail("Should not fail");
+				});
 		});
 
 		it("Should throw an InsightError for rooms with no index.htm file", function () {
@@ -128,6 +191,15 @@ describe("InsightFacade", function () {
 		it("Should throw an InsightError for rooms that are not zip", function () {
 			const id: string = "notZip";
 			const content: string = datasetContents.get("notZip") ?? "";
+
+			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Rooms);
+
+			return expect(result).eventually.to.be.rejectedWith(InsightError);
+		});
+
+		it("Should throw an InsightError for rooms with only index.htm file", function () {
+			const id: string = "onlyIndex";
+			const content: string = datasetContents.get("onlyIndex") ?? "";
 
 			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Rooms);
 
