@@ -21,11 +21,10 @@ export default class RoomsController {
         // Unzip valid files
 		const jsZip = new JSZip();
 		let parsedIndexFile: any;
-		let roomsDatasetIds: string[] = [];
-
 		return jsZip.loadAsync(content, {base64: true}).then((zip: any) => {
-			if (!isZipValid(zip, InsightDatasetKind.Rooms)) {
-				return Promise.reject(new InsightError("Error: Invalid Rooms Zip file"));
+			const isZipValidErr = isZipValid(zip, InsightDatasetKind.Rooms);
+			if (isZipValidErr !== "") {
+				return Promise.reject(new InsightError("Error: " + isZipValidErr));
 			}
 			const promiseArr: any[] = [];
 			promiseArr.push(zip.file("index.htm")?.async("text"));
@@ -47,7 +46,6 @@ export default class RoomsController {
 				let parsedBuildingsFile = parse(zipData[i]);
         		let tBodyRooms = this.findTBody(parsedBuildingsFile);
             	let trRoomsArray = this.filterByNodeName(tBodyRooms, "tr");
-
             	trRoomsArray.forEach((tr: any) => {
                 	let tdArray = this.filterByNodeName(tr, "td");
                 	this.getRoomsInfo(tdArray, id);
@@ -57,7 +55,9 @@ export default class RoomsController {
 		}).then((geoLocResults: object[]) => {
 			this.getFinalBuildings(geoLocResults, id);
 			const roomsDataWithNames = this.addBuildingNamesToRooms(id);
-
+			if (roomsDataWithNames.length === 0) {
+				return Promise.reject(new InsightError("Rooms Dataset Empty"));
+			}
 			const datasetInfo: InsightDataset = {
 				id,
 				kind: InsightDatasetKind.Rooms,
@@ -205,8 +205,11 @@ export default class RoomsController {
 			buildingsMap.set(building[`${id}_shortname` as keyof object], building);
 		});
 		let roomsInBuildings: object[] = [];
-		this.rooms.forEach((room: object) => {
+		for (const room of this.rooms) {
 			let roomHref: string = room[`${id}_href` as keyof object];
+			if (!roomHref) {
+				continue;
+			}
 			let slashIndex = roomHref.lastIndexOf("/");
 			let dashIndex = roomHref.lastIndexOf("-");
 			let roomShortName = roomHref.substring(slashIndex + 1, dashIndex);
@@ -225,7 +228,7 @@ export default class RoomsController {
 					roomsInBuildings.push(newRoom);
 				}
 			}
-		});
+		}
 		roomsInBuildings.filter((room) => Object.keys(room).length === 0);
 		roomsInBuildings.filter((room: any) => {
 			let onlyKeys = Object.keys(room).map((key: string) => key.split("_")[1]);
@@ -286,7 +289,6 @@ export default class RoomsController {
 						resolve(geoLocObj);
 					} catch (err: any) {
 						reject(err);
-						console.error(err.message);
 					}
 				});
 			}).on("error", (err: any) => {

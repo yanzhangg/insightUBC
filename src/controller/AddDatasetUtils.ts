@@ -69,8 +69,8 @@ export function isZipValid(zip: JSZip, kind: InsightDatasetKind): string {
 		}
 	} else if (kind === InsightDatasetKind.Rooms) {
 		if (!Object.keys(zip.files).includes("campus/") ||
-			!Object.keys(zip.files).includes("discover/") ||
-			!Object.keys(zip.files).includes("buildings-and-classrooms/") ||
+			!Object.keys(zip.files).includes("campus/discover/") ||
+			!Object.keys(zip.files).includes("campus/discover/buildings-and-classrooms/") ||
 			!Object.keys(zip.files).includes("index.htm")) {
 			error = "missing folder or index.htm";
 		}
