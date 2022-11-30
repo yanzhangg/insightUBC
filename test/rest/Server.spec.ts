@@ -44,6 +44,30 @@ describe("Server", function () {
 	// PUT requests
 
 	it("PUT test for courses dataset (200)", function () {
+		let ZIP_FILE_DATA: Buffer = fs.readFileSync("test/resources/archives/pair.zip");
+
+		try {
+			return chai.request(SERVER_URL)
+				.put("/dataset/sections/sections")
+				.send(ZIP_FILE_DATA)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: ChaiHttp.Response) {
+					// some logging here please!
+					console.log("PUT response: ", res.body);
+					expect(res.status).to.be.equal(200);
+				})
+				.catch(function (err) {
+					// some logging here please!
+					console.log("PUT request error: ", err);
+					expect.fail(err);
+				});
+		} catch (err) {
+			// and some more logging here!
+			console.error("PUT error: ", err);
+		}
+	});
+
+	it("PUT test for courses dataset (200)", function () {
 		let ZIP_FILE_DATA: Buffer = fs.readFileSync("test/resources/archives/small.zip");
 
 		try {
@@ -168,7 +192,42 @@ describe("Server", function () {
 		}
 	});
 
-	// POST requests
+	it("2 PUT same tests for rooms dataset (200)", function () {
+		let ZIP_FILE_DATA: Buffer = fs.readFileSync("test/resources/archives/rooms.zip");
+
+		try {
+			return chai.request(SERVER_URL)
+				.put("/dataset/rooms/rooms")
+				.send(ZIP_FILE_DATA)
+				.set("Content-Type", "application/x-zip-compressed")
+				.then(function (res: ChaiHttp.Response) {
+					console.log("PUT response: ", res.body);
+					expect(res.status).to.be.equal(200);
+				})
+				.catch(function (err) {
+					console.log("PUT request error: ", err);
+					expect.fail(err);
+				})
+				.then(() => {
+					chai.request(SERVER_URL)
+						.put("/dataset/rooms/rooms")
+						.send(ZIP_FILE_DATA)
+						.set("Content-Type", "application/x-zip-compressed")
+						.then(function (res: ChaiHttp.Response) {
+							console.log("PUT response: ", res.body);
+							expect(res.status).to.be.equal(200);
+						})
+						.catch(function (err) {
+							console.log("PUT request error: ", err);
+							expect.fail(err);
+						});
+				});
+		} catch (err) {
+			console.error("PUT error: ", err);
+		}
+	});
+
+	// // POST requests
 
 	it("POST test for querying courses dataset (200)", function () {
 		let query: object = {
@@ -192,6 +251,7 @@ describe("Server", function () {
 				.send(query)
 				.then(function (res: ChaiHttp.Response) {
 					expect(res.status).to.be.equal(200);
+					console.log(res.body);
 				})
 				.catch(function (err) {
 					console.log("POST response error: ", err);

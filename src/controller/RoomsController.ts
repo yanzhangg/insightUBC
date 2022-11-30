@@ -30,7 +30,9 @@ export default class RoomsController {
 			promiseArr.push(zip.file("index.htm")?.async("text"));
 			zip.folder("campus")?.folder("discover")?.folder("buildings-and-classrooms")?.
 				forEach((_: any, zipObj: any) => {
-					promiseArr.push(zipObj.async("text"));
+					if (zipObj.name.includes(".htm")) {
+						promiseArr.push(zipObj.async("text"));
+					}
 				});
 			return Promise.all(promiseArr);
 		}).then((zipData: any[]) => {
@@ -38,13 +40,12 @@ export default class RoomsController {
 			parsedIndexFile =  parse(zipData[0]);
 			let tBody = this.findTBody(parsedIndexFile), trArray = this.filterByNodeName(tBody, "tr");
 			trArray.forEach((tr: any) => {
-				let tdArray = this.filterByNodeName(tr, "td");
-				this.getBuildingInfo(tdArray, id);
+				// let tdArray = this.filterByNodeName(tr, "td");
+				this.getBuildingInfo(this.filterByNodeName(tr, "td"), id);
 			});
 			// process rooms.htm
 			for (let i = 1; i < zipData.length; i++) {
-				let parsedBuildingsFile = parse(zipData[i]);
-        		let tBodyRooms = this.findTBody(parsedBuildingsFile);
+				let parsedBuildingsFile = parse(zipData[i]), tBodyRooms = this.findTBody(parsedBuildingsFile);
             	let trRoomsArray = this.filterByNodeName(tBodyRooms, "tr");
             	trRoomsArray.forEach((tr: any) => {
                 	let tdArray = this.filterByNodeName(tr, "td");
