@@ -10,7 +10,8 @@ InsightResult[] | InsightError {
 	const transformApply: any = queryTransform["APPLY" as keyof object];
 	let groupedObj: object = groupBy(queryResult, transformGroup);
 	let allGroupedArrays: any[] = [];
-	let groupedArr: any = iterateThroughObj(groupedObj, allGroupedArrays);
+	let groupedArr: object[][] = [];
+	groupedArr = iterateThroughObj(groupedObj, allGroupedArrays);
 
 	if (!isDatasetIdValid(datasetId, transformGroup, transformApply)) {
 		return new InsightError("Dataset id mismatch in GROUP or APPLY");
@@ -134,8 +135,10 @@ export function getAvg(groupedArr: object[][], ruleField: string, applyKey: stri
 		let count: number = 0;
 		groupArray.forEach((obj: any) => {
 			let num: number = obj[`${ruleField}`];
-			let numDec: Decimal = new Decimal(num);
-			total = Decimal.add(total, numDec);
+			if (num) {
+				let numDec: Decimal = new Decimal(num);
+				total = Decimal.add(total, numDec);
+			}
 			count++;
 		});
 		let avg = total.toNumber() / count;
@@ -213,14 +216,23 @@ export function isQueryTransformationValid(queryTransform: object): boolean {
 	if (transformApply === undefined || transformApply === null || transformApply.length === 0) {
 		return false;
 	}
+	if (!isTransformApplyValid(transformApply)) {
+		return false;
+	}
+	return true;
+}
+
+function isTransformApplyValid(transformApply: object[]): boolean {
+	let applyObjKeys: any[] = [];
 	for (const applyObj of transformApply) {
+		applyObjKeys.push(Object.keys(applyObj)[0]);
 		const applyObjVal: object = Object.values(applyObj)[0];
 		if (Object.keys(applyObj).length === 0 || Object.keys(applyObj).includes("_") ||
 			Object.values(applyObj).length === 0 || typeof applyObjVal !== "object") {
 			return false;
 		}
 		const applyToken: string = Object.keys(applyObjVal)[0];
-		const applyRuleKey: string = Object.values(applyObjVal)[0].split("_")[1];
+		let applyRuleKey: string = Object.values(applyObjVal)[0].split("_")[1];
 		if (Object.keys(applyObjVal).length !== 1 || Object.values(applyObjVal).length !== 1 ||
             !queryApplyTokens.includes(applyToken) ||
             (!sectionKeys.includes(applyRuleKey) &&
@@ -230,6 +242,10 @@ export function isQueryTransformationValid(queryTransform: object): boolean {
 		if (applyToken !== "COUNT" && !numKeys.includes(applyRuleKey)) {
 			return false;
 		}
+	}
+	const applyObjKeysNoDuplicate = new Set(applyObjKeys);
+	if (applyObjKeys.length !== applyObjKeysNoDuplicate.size) {
+		return false;
 	}
 	return true;
 }

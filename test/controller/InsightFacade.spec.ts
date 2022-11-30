@@ -179,27 +179,36 @@ describe("InsightFacade", function () {
 			return expect(result).eventually.to.be.rejectedWith(InsightError);
 		});
 
-		it("Should throw an InsightError for not htm rooms dataset", function () {
+		it("should not add rooms in WOOD.txt file", function () {
 			const id: string = "notHTM";
 			const content: string = datasetContents.get("notHTM") ?? "";
+			return insightFacade
+				.addDataset(id, content, InsightDatasetKind.Rooms)
+				.then(() => insightFacade.listDatasets())
+				.then((insightDatasets) => {
+					expect(insightDatasets).to.deep.equal([
+						{
+							id: "notHTM",
+							kind: InsightDatasetKind.Rooms,
+							numRows: 348,
+						},
+					]);
+					expect(insightDatasets).to.be.an.instanceof(Array);
+					expect(insightDatasets).to.be.length(1);
 
-			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Rooms);
-
-			return expect(result).eventually.to.be.rejectedWith(InsightError);
+					const [insightDataset] = insightDatasets;
+					expect(insightDataset).to.have.property("id");
+					expect(insightDataset.id).to.equal("notHTM");
+				})
+				.catch((err) => {
+					console.log(err.message);
+					expect.fail("Should not fail");
+				});
 		});
 
 		it("Should throw an InsightError for rooms that are not zip", function () {
 			const id: string = "notZip";
 			const content: string = datasetContents.get("notZip") ?? "";
-
-			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Rooms);
-
-			return expect(result).eventually.to.be.rejectedWith(InsightError);
-		});
-
-		it("Should throw an InsightError for rooms with only index.htm file", function () {
-			const id: string = "onlyIndex";
-			const content: string = datasetContents.get("onlyIndex") ?? "";
 
 			const result = insightFacade.addDataset(id, content, InsightDatasetKind.Rooms);
 
