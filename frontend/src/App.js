@@ -1,17 +1,20 @@
 import "./App.css";
-import {Button} from "@mui/material";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Main from "./Main.js"
+import Sections from "./components/Sections";
+import Rooms from "./components/Rooms";
+import React from 'react';
 
 function App() {
 	return (
-		<div className="App">
-			<header className="App-header">
-				<div>
-					<Button variant="contained">SECTIONS</Button>
-					<Button variant="contained">ROOMS</Button>
-				</div>
-			</header>
-		</div>
+	  <Router>
+		<Routes>
+		  <Route path="/" element={<Main />} />
+		  <Route path="/sections" element={<Sections />} />
+		  <Route path="/rooms" element={<Rooms />} />
+		</Routes>
+	  </Router>
 	);
-}
+  }
 
 export default App;
